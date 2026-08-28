@@ -27,6 +27,10 @@ public struct DirectFolderAccessProvider: FolderAccessProvider, @unchecked Senda
         try accessDirectory(at: url)
     }
 
+    public func authorizeFolder(at url: URL) throws -> AccessLease {
+        try accessDirectory(at: url)
+    }
+
     private func accessDirectory(at url: URL) throws -> AccessLease {
         let normalizedURL = url.standardizedFileURL
         var isDirectory: ObjCBool = false

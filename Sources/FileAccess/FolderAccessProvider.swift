@@ -28,4 +28,9 @@ public protocol FolderAccessProvider: Sendable {
     func accessImage(at url: URL) throws -> AccessLease
     func accessContainingFolder(of url: URL) throws -> AccessLease
     func restorePersistedAccess(to url: URL) throws -> AccessLease?
+    func authorizeFolder(at url: URL) throws -> AccessLease
+}
+
+public enum FolderAccessError: Error, Sendable, Equatable {
+    case authorizationRequired(URL)
 }

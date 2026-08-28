@@ -6,6 +6,7 @@ final class AppCoordinator: NSObject {
     private let preferences = PreferencesStore()
     private let pipeline = ImageLoadPipeline()
     private let systemIntegration = SystemIntegration(workspace: AppKitSystemWorkspace())
+    private let folderAccessProvider: any FolderAccessProvider = DirectFolderAccessProvider()
     private var windowControllers: [ViewerWindowController] = []
     private var preferencesWindowController: PreferencesWindowController?
     private var informationWindowController: ImageInfoWindowController?
@@ -23,7 +24,11 @@ final class AppCoordinator: NSObject {
             session: ViewingSession(loader: pipeline),
             preferences: preferences,
             systemIntegration: systemIntegration,
+            folderAccessProvider: folderAccessProvider,
             onOpenPanelRequest: { [weak self] in self?.showOpenPanel(nil) },
+            onFolderAuthorizationRequest: { [weak self] folderURL in
+                self?.authorizeFolderAccess(to: folderURL)
+            },
             onShowInformation: { [weak self] model in self?.showInformation(model) },
             onClose: { [weak self] controller in self?.viewerWindowDidClose(controller) }
         )
@@ -63,6 +68,29 @@ final class AppCoordinator: NSObject {
         let controller = windowControllers.first ?? makeWindowController()
         controller.showWindow(nil)
         controller.showWelcome()
+    }
+
+    private func authorizeFolderAccess(to requestedFolder: URL) -> AccessLease? {
+        let panel = NSOpenPanel()
+        panel.title = "Allow Folder Access"
+        panel.message = "Choose this folder or one of its parent folders to browse nearby images."
+        panel.prompt = "Allow Access"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = requestedFolder
+        guard panel.runModal() == .OK, let selectedURL = panel.url else { return nil }
+        let selected = selectedURL.standardizedFileURL
+        let requested = requestedFolder.standardizedFileURL
+        guard Self.directory(selected, contains: requested) else { return nil }
+        return try? folderAccessProvider.authorizeFolder(at: selected)
+    }
+
+    private static func directory(_ parent: URL, contains child: URL) -> Bool {
+        let parentComponents = parent.pathComponents
+        let childComponents = child.pathComponents
+        guard parentComponents.count <= childComponents.count else { return false }
+        return Array(childComponents.prefix(parentComponents.count)) == parentComponents
     }
 
     @objc func showPreferences(_ sender: Any?) {

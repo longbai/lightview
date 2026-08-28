@@ -11,6 +11,8 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private let container = DropContainerView()
     private let onOpenPanelRequest: () -> Void
     private let systemIntegration: SystemIntegration
+    private let folderAccessProvider: any FolderAccessProvider
+    private let onFolderAuthorizationRequest: (URL) -> AccessLease?
     private let onShowInformation: (ImageInformationModel) -> Void
     private let onClose: (ViewerWindowController) -> Void
     private var showsInformationAfterNextPresentation = false
@@ -21,6 +23,9 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private var animationSpeed = 1.0
     private var resumesAnimationAfterOcclusion = false
     private var movieExportWindowController: MovieExportWindowController?
+    private var currentImageAccessLease: AccessLease?
+    private var folderAccessLease: AccessLease?
+    private var folderNavigationDenied = false
     private lazy var slideshowController = SlideshowController { [weak self] direction in
         MainActor.assumeIsolated { self?.session.navigate(direction) ?? false }
     }
@@ -29,14 +34,18 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         session: ViewingSession,
         preferences: PreferencesStore,
         systemIntegration: SystemIntegration,
+        folderAccessProvider: any FolderAccessProvider,
         onOpenPanelRequest: @escaping () -> Void,
+        onFolderAuthorizationRequest: @escaping (URL) -> AccessLease?,
         onShowInformation: @escaping (ImageInformationModel) -> Void,
         onClose: @escaping (ViewerWindowController) -> Void
     ) {
         self.session = session
         self.preferences = preferences
         self.systemIntegration = systemIntegration
+        self.folderAccessProvider = folderAccessProvider
         self.onOpenPanelRequest = onOpenPanelRequest
+        self.onFolderAuthorizationRequest = onFolderAuthorizationRequest
         self.onShowInformation = onShowInformation
         self.onClose = onClose
         let window = NSWindow(
@@ -65,20 +74,28 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     func open(_ url: URL) {
         slideshowController.manualNavigationOccurred()
         do {
+            folderNavigationDenied = false
             var isDirectory: ObjCBool = false
             FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
             if isDirectory.boolValue {
+                let lease = try folderAccessProvider.authorizeFolder(at: url)
                 let catalog = try FolderCatalog(directoryURL: url, sort: preferences.catalogSort)
                 guard let first = catalog.entries.first else {
                     throw ImageLoadError.decodeFailed("No supported images in this folder")
                 }
+                replaceFolderLease(with: lease)
+                replaceImageLease(with: nil)
                 session.catalog = catalog
                 session.open(first.url, targetPixelSize: decodeTargetSize)
             } else {
-                session.catalog = try? FolderCatalog(
-                    directoryURL: url.deletingLastPathComponent(),
-                    sort: preferences.catalogSort
-                )
+                let imageLease = try folderAccessProvider.accessImage(at: url)
+                let folder = url.deletingLastPathComponent()
+                let restoredFolderLease = try folderAccessProvider.restorePersistedAccess(to: folder)
+                replaceImageLease(with: imageLease)
+                replaceFolderLease(with: restoredFolderLease)
+                session.catalog = restoredFolderLease.flatMap { _ in
+                    try? FolderCatalog(directoryURL: folder, sort: preferences.catalogSort)
+                }
                 session.open(url, targetPixelSize: decodeTargetSize)
             }
         } catch let error as ImageLoadError {
@@ -293,6 +310,13 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             }
             return (session.catalog?.entries.count ?? 0) > 1 && session.currentAsset != nil
         }
+        if action == #selector(previousImage(_:)) || action == #selector(nextImage(_:)) {
+            guard session.currentAsset != nil, !folderNavigationDenied else { return false }
+            return session.catalog == nil || (session.catalog?.entries.count ?? 0) > 1
+        }
+        if action == #selector(firstImage(_:)) || action == #selector(lastImage(_:)) {
+            return (session.catalog?.entries.count ?? 0) > 1 && session.currentAsset != nil
+        }
         return imageActions.contains(action) ? session.currentAsset != nil : true
     }
 
@@ -382,7 +406,43 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
 
     private func navigateManually(_ direction: CatalogDirection) {
         slideshowController.manualNavigationOccurred()
+        if session.catalog == nil, !folderNavigationDenied,
+           let currentURL = session.currentURL {
+            let folder = currentURL.deletingLastPathComponent()
+            guard let lease = onFolderAuthorizationRequest(folder) else {
+                folderNavigationDenied = true
+                showFolderAccessCancelledMessage()
+                return
+            }
+            do {
+                let catalog = try FolderCatalog(directoryURL: folder, sort: preferences.catalogSort)
+                replaceFolderLease(with: lease)
+                session.catalog = catalog
+            } catch {
+                lease.end()
+                showFolderAccessCancelledMessage()
+                return
+            }
+        }
         session.navigate(direction)
+    }
+
+    private func replaceImageLease(with lease: AccessLease?) {
+        currentImageAccessLease?.end()
+        currentImageAccessLease = lease
+    }
+
+    private func replaceFolderLease(with lease: AccessLease?) {
+        folderAccessLease?.end()
+        folderAccessLease = lease
+    }
+
+    private func showFolderAccessCancelledMessage() {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = "Folder Access Was Not Granted"
+        alert.informativeText = "The current image remains open. Open it again to request nearby-image access later."
+        if let window { alert.beginSheetModal(for: window) }
     }
 
     private func startSlideshow(direction: CatalogDirection) {
