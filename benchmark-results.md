@@ -6,12 +6,14 @@ The reproducible 2026-08-28 comparison now covers LightView 0.1.0, qView 7.1, in
 
 | Application | `.app` logical | Main Mach-O | Median RSS | Relative to LightView |
 |---|---:|---:|---:|---:|
-| LightView | 4.19 MiB | 3.11 MiB (universal) | 149.20 MiB | 1.00× |
+| LightView | 4.23 MiB | 3.15 MiB (universal) | 149.20 MiB | 1.00× |
 | Tovi 2.0.4 | 5.11 MiB | 0.87 MiB (x86_64) | 408.62 MiB | 2.74× |
 | qView 7.1 | 116.41 MiB | 3.19 MiB (universal) | 519.72 MiB | 3.48× |
 | SimpView | 1.91 MiB | 1.10 MiB (arm64) | 795.83 MiB | 5.33× |
 
 See [`benchmarks/results/2026-08-28/summary.md`](benchmarks/results/2026-08-28/summary.md) for method, variability, WebKit attribution, application identities, and raw-file links. The older two-app study below is retained as historical evidence; its one-shot huge-image figures are superseded by the alternating three-round corpus.
+
+The final Direct binary was subsequently rechecked alone over three rounds (15 samples): 136.42 MiB median RSS, 134.90 MiB mean, and 118.63–142.08 MiB range, with zero descendant RSS. This remains below the accepted alternating-comparison median but does not replace that protocol.
 
 ## Historical Tovi 1.5 vs SimpView comparison
 

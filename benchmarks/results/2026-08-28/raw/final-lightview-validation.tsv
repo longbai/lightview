@@ -1,0 +1,16 @@
+timestamp	label	bundle_id	pid	sample	main_rss_kib	child_rss_kib	webkit_global_rss_kib
+2026-08-28T15:41:30Z	LightView	app.lightview.LightView	10037	1	139696	0	167360
+2026-08-28T15:41:31Z	LightView	app.lightview.LightView	10037	2	139600	0	168688
+2026-08-28T15:41:31Z	LightView	app.lightview.LightView	10037	3	139520	0	168976
+2026-08-28T15:41:32Z	LightView	app.lightview.LightView	10037	4	139520	0	169152
+2026-08-28T15:41:33Z	LightView	app.lightview.LightView	10037	5	139520	0	169376
+2026-08-28T15:41:50Z	LightView	app.lightview.LightView	10129	1	145488	0	170448
+2026-08-28T15:41:51Z	LightView	app.lightview.LightView	10129	2	145296	0	171088
+2026-08-28T15:41:51Z	LightView	app.lightview.LightView	10129	3	145280	0	171120
+2026-08-28T15:41:52Z	LightView	app.lightview.LightView	10129	4	145280	0	171360
+2026-08-28T15:41:52Z	LightView	app.lightview.LightView	10129	5	145280	0	171888
+2026-08-28T15:42:10Z	LightView	app.lightview.LightView	10242	1	141952	0	169088
+2026-08-28T15:42:11Z	LightView	app.lightview.LightView	10242	2	140384	0	170480
+2026-08-28T15:42:11Z	LightView	app.lightview.LightView	10242	3	122288	0	170624
+2026-08-28T15:42:12Z	LightView	app.lightview.LightView	10242	4	121472	0	170800
+2026-08-28T15:42:12Z	LightView	app.lightview.LightView	10242	5	121472	0	170960

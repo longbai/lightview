@@ -2,7 +2,7 @@
 
 ## Automated local checks
 
-- [x] Unit, integration, malformed-input, allocation-limit, export, and performance tests compile and pass on the current M1 host.
+- [x] 142 unit, integration, malformed-input, allocation-limit, export, and performance tests pass on the current M1 host.
 - [x] Release-Direct and Release-AppStore build as universal x86_64 + arm64 applications.
 - [x] x86_64 declares macOS 10.15; arm64 declares macOS 11.0.
 - [x] No SwiftUI or WebKit linkage is present.
@@ -12,6 +12,7 @@
 - [x] Both configurations pass current-system startup smoke.
 - [x] English and Simplified Chinese localization keys match.
 - [x] Third-party source licenses are present.
+- [ ] Empty-window RSS target of 55 MiB is not met: final three-second smoke samples were 80.08 MiB (Direct) and 86.30 MiB (App Store). The 12000×8000 fit-image target is met (149.20 MiB alternating-comparison median; 136.42 MiB final-binary recheck median).
 - [ ] UI automation executes. Tests compile, but the current host reports `Timed out while enabling automation mode` before any test runs.
 - [ ] Address Sanitizer executes. The Xcode 26 hostless XCTest runner builds the ASan bundle but aborts before tests because its interceptors load too late.
 

@@ -1,6 +1,6 @@
 # LightView Technical Specification
 
-Status: Draft for review  
+Status: Implemented release candidate; external release gates remain
 Date: 2026-08-28
 
 ## 1. Architecture overview
@@ -117,7 +117,7 @@ All catalog and file reads require an `AccessLease` supplied by `FolderAccessPro
 ```swift
 protocol FolderAccessProvider {
     func accessImage(at url: URL) throws -> AccessLease
-    func accessContainingFolder(of url: URL) throws -> AccessLease
+    func authorizeFolder(at url: URL) throws -> AccessLease
     func restorePersistedAccess(to url: URL) throws -> AccessLease?
 }
 ```
@@ -132,7 +132,7 @@ protocol FolderAccessProvider {
 - Balances every successful `startAccessingSecurityScopedResource()` with exactly one stop call owned by the lease.
 - Refreshes stale bookmarks and removes invalid ones.
 
-The App Store entitlement permits user-selected read/write access because `NSSavePanel` must create MP4 output, but viewing code opens source files read-only.
+The App Store entitlement permits user-selected read-only source access. `NSSavePanel` grants the application access to the explicit MP4 destination selected by the user, so no general read/write source entitlement is needed.
 
 ### 3.5 Format detection and decode routing
 
@@ -174,7 +174,7 @@ enum DisplayAsset {
 
 `AnimationAsset` contains canvas dimensions, frame count, loop behavior, a frame provider, and normalized timing information. It does not require all frames to be resident.
 
-`VectorAsset` retains a safe parsed path model and can rasterize for a requested output size.
+`VectorAsset` is the display contract for retained vector content. The current SVG path validates/parses the source and rasterizes it to the requested viewport size before publication; retained vector rerasterization remains a future optimization, not a release claim.
 
 Display assets are immutable after publication. Mutable playback position belongs to the session.
 
@@ -196,7 +196,7 @@ NanoSVG source is vendored at a pinned version with its license. A C adapter exp
 
 Before parsing, LightView rejects oversized source files according to a configurable safety ceiling and disables external resource resolution. The renderer converts supported paths and paints into Core Graphics operations.
 
-Vector content is retained while visible. Raster cache keys include source identity, target pixel dimensions, display scale, and appearance-dependent background inputs.
+SVG content is reparsed for a requested decode and published as a raster. Raster cache keys include source identity and requested pixel dimensions.
 
 ### 3.9 WebP decoder
 
@@ -207,7 +207,7 @@ The adapter supports:
 - Header validation and feature discovery.
 - Decode directly into an allocated BGRA buffer with checked row-byte arithmetic.
 - Decoder-side scaling for preview-sized output when supported.
-- ICC, EXIF, and XMP extraction.
+- ICC profile extraction when present in the WebP container.
 - Animation demux, frame offsets, blend/disposal flags, durations, and loop count.
 - Strict upper bounds on dimensions, frame count, allocation size, and duration.
 
@@ -243,7 +243,7 @@ Initial policy:
 - Animation frames: sliding window around playback position.
 - Memory-pressure event: immediately remove neighbors, animation history, and nonvisible full-resolution data.
 
-The default cache budget is selected from physical memory but capped to prevent a lightweight viewer from consuming an excessive fraction of RAM. The exact formula will be finalized by performance tests and recorded in the implementation plan.
+The default raster-cache budget is 256 MiB. Individual decoded items larger than the budget are not retained as reusable cache entries; animation uses its own bounded 256 MiB playback cache.
 
 ### 3.12 Playback
 
@@ -434,4 +434,3 @@ The final README shall contain:
 - Privacy statement.
 - Third-party acknowledgements.
 - Reproducible performance method and a comparison table for LightView, qView, Tovi, and SimpView.
-

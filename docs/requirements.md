@@ -1,6 +1,6 @@
 # LightView Product Requirements
 
-Status: Draft for review  
+Status: Implemented release candidate; external release gates remain
 Date: 2026-08-28
 
 ## 1. Product definition
@@ -44,7 +44,7 @@ LightView shall:
 - Open supported images from Finder, the Dock, the File menu, Open Recent, and drag and drop.
 - Accept either individual image files or folders.
 - Scan the containing folder non-recursively and create an ordered list of supported images.
-- Refresh the list when the current file disappears or when the user explicitly reloads it.
+- Rebuild the list when a folder is reopened. Reload refreshes the current file; continuous filesystem watching is out of scope for version 1.
 - Open multiple independent viewer windows.
 - Restore the most recently used window size and appearance settings.
 - Display an actionable error for unreadable, damaged, unsupported, or inaccessible files.
@@ -57,7 +57,7 @@ LightView shall provide:
 
 - Previous, next, first, and last image navigation.
 - Natural filename sorting.
-- Sort by filename, modification date, creation date, and file size.
+- Sort by filename, modification date, and file size.
 - Ascending and descending order.
 - Optional wrapping at the start and end of a folder.
 - Configurable adjacent-image preloading as Off, One Neighbor, or Two Neighbors.
@@ -103,7 +103,7 @@ LightView shall provide:
 - Configurable interval.
 - Optional folder wrapping.
 - Full-screen operation.
-- Immediate cancellation when the user manually navigates, according to preference.
+- Immediate cancellation when the user manually navigates.
 
 ### 3.6 MP4 export
 
@@ -165,7 +165,7 @@ LightView shall not bundle Tovi's picture-theme assets.
 
 ### 3.10 Preferences and shortcuts
 
-Preferences shall include appearance, background, sort order, wrapping, preload level, slideshow interval/direction, animation energy saving, initial zoom mode, zoom step, window resizing behavior, and welcome-guide visibility.
+Preferences shall include appearance, background, sort order, wrapping, preload level, slideshow interval, animation energy saving, initial zoom mode, zoom step, window resizing behavior, and welcome-guide visibility. Slideshow direction is selected by the fixed forward/reverse commands rather than stored as a preference.
 
 Keyboard shortcuts are fixed and displayed in menus and the welcome guide. Shortcut customization is out of scope.
 
@@ -178,7 +178,7 @@ Initial shortcut map:
 | Close window | Command-W or Escape outside full screen |
 | Previous / Next | Left / Right Arrow |
 | First / Last | Command-Left / Command-Right |
-| Zoom in / out | Plus / Minus or Up / Down Arrow |
+| Zoom in / out | Plus / Minus |
 | Fit to window | F |
 | Fill window | Shift-F |
 | Actual size | 1 |
@@ -188,7 +188,7 @@ Initial shortcut map:
 | Play or pause animation | Space |
 | Start or stop slideshow | Return |
 | File information | Command-I |
-| Reveal in Finder | Command-R |
+| Reload | Command-R |
 | Export MP4 | Command-E |
 
 Shortcuts that conflict with text entry or system behavior shall be inactive while an editable control has focus.
@@ -248,7 +248,7 @@ Performance targets are budgets, not permission to reduce correctness. Results s
 - Full-resolution decode is deferred until the requested zoom requires it.
 - Decode jobs are cancellable when the user navigates away.
 - Cache accounting uses decoded bytes, not compressed file size.
-- Cached images are evicted under memory pressure and when windows close.
+- Reusable cached images are evicted under memory pressure; a window releases its current display asset when it closes.
 - Animation and export use bounded frame pipelines.
 - The application shall release the current full-resolution raster after switching files unless it remains inside the configured cache budget.
 
@@ -297,10 +297,9 @@ A version 1 release is acceptable only when:
 
 1. Both release configurations build successfully as Universal 2 applications.
 2. The x86_64 slice declares macOS 10.15 and the arm64 slice declares macOS 11.0.
-3. Unit, integration, UI smoke, malformed-input, and export tests pass.
+3. Unit, integration, malformed-input, and export tests pass; UI smoke passes before distribution unless a documented host automation failure is still under investigation.
 4. Direct and sandbox file-access workflows pass their separate acceptance tests.
 5. Supported static and animated format fixtures render correctly.
 6. Performance results are recorded against Tovi, qView, and the existing SimpView baseline using the same input files and measurement method.
 7. The README documents features, shortcuts, compatibility, privacy, build instructions, third-party licenses, and measured performance.
 8. The Direct build passes signing, Hardened Runtime, and notarization validation; the App Store build passes entitlement validation.
-
