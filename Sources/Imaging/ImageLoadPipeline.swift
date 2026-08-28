@@ -23,13 +23,18 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
     private let callbackQueue: DispatchQueue
 
     public init(
-        decoder: any ImageDecoding = ImageDecoderRouter(),
+        decoder: (any ImageDecoding)? = nil,
         animationDecoder: (any AnimationAssetDecoding)? = AnimationDecoderRouter(),
         cache: RasterCache = RasterCache(byteLimit: 256 * 1_024 * 1_024),
         decodeQueue: OperationQueue? = nil,
-        callbackQueue: DispatchQueue = .main
+        callbackQueue: DispatchQueue = .main,
+        nativeFormatPolicy: NativeFormatPolicy = NativeFormatPolicy(),
+        operatingSystemVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
     ) {
-        self.decoder = decoder
+        self.decoder = decoder ?? ImageDecoderRouter(
+            nativeFormatPolicy: nativeFormatPolicy,
+            operatingSystemVersion: operatingSystemVersion
+        )
         self.animationDecoder = animationDecoder
         self.cache = cache
         self.callbackQueue = callbackQueue

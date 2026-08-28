@@ -321,7 +321,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             let alert = NSAlert()
             alert.alertStyle = .warning
             alert.messageText = "Couldn’t Open Image"
-            alert.informativeText = String(describing: error)
+            alert.informativeText = error.userFacingDescription
             if let window { alert.beginSheetModal(for: window) }
         }
     }

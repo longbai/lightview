@@ -229,6 +229,7 @@ public enum ImageLoadError: Error, Sendable, Equatable {
     case missing(URL)
     case accessDenied(URL)
     case unsupported(ImageFormat)
+    case unsupportedSystem(format: ImageFormat, minimumMajorVersion: Int)
     case corrupt(URL)
     case cancelled
     case unsafeExternalResource(URL)
@@ -236,4 +237,15 @@ public enum ImageLoadError: Error, Sendable, Equatable {
     case decodedImageTooLarge(required: Int, limit: Int)
     case allocationFailed(required: Int)
     case decodeFailed(String)
+}
+
+public extension ImageLoadError {
+    var userFacingDescription: String {
+        switch self {
+        case .unsupportedSystem(.avif, let minimumMajorVersion):
+            "AVIF requires macOS \(minimumMajorVersion) or later"
+        default:
+            String(describing: self)
+        }
+    }
 }

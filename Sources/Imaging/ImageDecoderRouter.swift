@@ -4,15 +4,21 @@ public struct ImageDecoderRouter: ImageDecoding, Sendable {
     private let imageIO: any ImageDecoding
     private let svg: any ImageDecoding
     private let webPFallback: any ImageDecoding
+    private let nativeFormatPolicy: NativeFormatPolicy
+    private let operatingSystemVersion: OperatingSystemVersion
 
     public init(
         imageIO: any ImageDecoding = ImageIODecoder(),
         svg: any ImageDecoding = SVGDecoder(),
-        webPFallback: any ImageDecoding = WebPDecoder()
+        webPFallback: any ImageDecoding = WebPDecoder(),
+        nativeFormatPolicy: NativeFormatPolicy = NativeFormatPolicy(),
+        operatingSystemVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
     ) {
         self.imageIO = imageIO
         self.svg = svg
         self.webPFallback = webPFallback
+        self.nativeFormatPolicy = nativeFormatPolicy
+        self.operatingSystemVersion = operatingSystemVersion
     }
 
     public func inspect(url: URL) throws -> ImageInspection {
@@ -22,6 +28,9 @@ public struct ImageDecoderRouter: ImageDecoding, Sendable {
         case .webP:
             do { return try imageIO.inspect(url: url) }
             catch { return try webPFallback.inspect(url: url) }
+        case .avif:
+            try nativeFormatPolicy.requireAVIFSupport(on: operatingSystemVersion)
+            return try imageIO.inspect(url: url)
         default:
             return try imageIO.inspect(url: url)
         }
@@ -40,6 +49,9 @@ public struct ImageDecoderRouter: ImageDecoding, Sendable {
                 try cancellation.throwIfCancelled()
                 return try webPFallback.decode(request, cancellation: cancellation)
             }
+        case .avif:
+            try nativeFormatPolicy.requireAVIFSupport(on: operatingSystemVersion)
+            return try imageIO.decode(request, cancellation: cancellation)
         default:
             return try imageIO.decode(request, cancellation: cancellation)
         }

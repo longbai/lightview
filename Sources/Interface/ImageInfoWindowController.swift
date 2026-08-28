@@ -38,12 +38,23 @@ final class ImageInfoWindowController: NSWindowController {
         grid.rowSpacing = 8
         grid.columnSpacing = 14
         grid.translatesAutoresizingMaskIntoConstraints = false
+        let formatNote = NSTextField(
+            wrappingLabelWithString: "AVIF uses the macOS ImageIO decoder and requires macOS 13 or later."
+        )
+        formatNote.textColor = .secondaryLabelColor
+        formatNote.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        formatNote.setAccessibilityIdentifier("information.avifRequirement")
+        formatNote.translatesAutoresizingMaskIntoConstraints = false
         let content = NSView()
         content.addSubview(grid)
+        content.addSubview(formatNote)
         NSLayoutConstraint.activate([
             grid.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
             grid.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
             grid.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
+            formatNote.leadingAnchor.constraint(equalTo: grid.leadingAnchor),
+            formatNote.trailingAnchor.constraint(equalTo: grid.trailingAnchor),
+            formatNote.topAnchor.constraint(equalTo: grid.bottomAnchor, constant: 18),
         ])
         window?.contentView = content
     }

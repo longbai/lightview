@@ -35,5 +35,6 @@ final class PreferencesAndInfoSmokeTests: XCTestCase {
 
         XCTAssertTrue(app.windows["information.window"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts[fixtureURL.lastPathComponent].exists)
+        XCTAssertTrue(app.staticTexts["information.avifRequirement"].exists)
     }
 }
