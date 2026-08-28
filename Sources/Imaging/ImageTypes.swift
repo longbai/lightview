@@ -138,5 +138,7 @@ public enum ImageLoadError: Error, Sendable, Equatable {
     case cancelled
     case unsafeExternalResource(URL)
     case sourceTooLarge(actual: Int, limit: Int)
+    case decodedImageTooLarge(required: Int, limit: Int)
+    case allocationFailed(required: Int)
     case decodeFailed(String)
 }

@@ -1,9 +1,20 @@
 #!/bin/bash
 set -euo pipefail
+export ZERO_AR_DATE=1
 
 script_directory="$(cd "$(dirname "$0")" && pwd)"
 project_directory="$(cd "$script_directory/.." && pwd)"
 source_directory="$project_directory/Vendor/libwebp/upstream"
+
+if ! command -v cmake >/dev/null 2>&1; then
+    echo "LightView requires CMake to build the pinned libwebp decoder." >&2
+    exit 1
+fi
+
+if [[ ! -f "$source_directory/CMakeLists.txt" ]]; then
+    echo "Initialize git submodules before building LightView." >&2
+    exit 1
+fi
 
 build_architecture() {
     local architecture="$1"

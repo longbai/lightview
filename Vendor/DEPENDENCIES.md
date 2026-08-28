@@ -27,6 +27,11 @@ LightView additionally scans SVG source before parsing and rejects external refe
 - License: BSD 3-Clause, reproduced in `Vendor/libwebp/upstream/COPYING`
 - Build script: `scripts/build-libwebp.sh`
 
+The `LightViewCore` target has a dependency-aware **Prepare libwebp** build phase.
+After submodules are initialized, an ordinary Xcode or `xcodebuild` build creates
+missing architecture archives automatically; developers may also run the build
+script directly. CMake and the Xcode command-line tools are required.
+
 The script configures separate MinSizeRel builds for x86_64/macOS 10.15 and
 arm64/macOS 11.0. Shared libraries and every command-line, encoder-facing,
 muxing, JavaScript, extra, and fuzz target are disabled; SIMD remains enabled.
@@ -38,10 +43,10 @@ Archive SHA-256 values from the pinned clean build:
 
 | Architecture | Archive | SHA-256 |
 | --- | --- | --- |
-| x86_64 | `libwebpdecoder.a` | `a828c70d934b33970d4277f603cb6354f29138f90513aecc47fe92c7f2b0f182` |
-| x86_64 | `libwebpdemux.a` | `e2e8e01b38ad8ae078949cfb1fe4683d2826447b6d526ca1c498f1d9019909d3` |
-| arm64 | `libwebpdecoder.a` | `7ada089e665e98f978cafe7bbe35498e1cd8860eef7a081d2a319cdc46de7218` |
-| arm64 | `libwebpdemux.a` | `f823ff560a1b27bbf81925663cfffeffdb8b8e6c8be5170f1a3e214677c37edb` |
+| x86_64 | `libwebpdecoder.a` | `c4b975301ea33c45fd80da6a27ee5d17c889ed6552f5aa285c2043e67eef2960` |
+| x86_64 | `libwebpdemux.a` | `9a6c1bdfcaa4f83b52b899cd55792d02eeab99e16d2b496bf04f5505256754e7` |
+| arm64 | `libwebpdecoder.a` | `259afb549727e3faec590ccc81acc17f49d8e040b652c176bba183feaaf5dccc` |
+| arm64 | `libwebpdemux.a` | `0e4969c95f9af6c1c85dbdcb4e0811a94b456a2796d44f26e97c2011aa90ca4a` |
 
 The demux archive contains only `anim_decode.c.o` and `demux.c.o`. The decoder
 archive contains decoder (`src/dec`), decoder DSP (`src/dsp`), and decoder utility
