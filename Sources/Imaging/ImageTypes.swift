@@ -234,9 +234,66 @@ public enum ImageLoadError: Error, Sendable, Equatable {
     case cancelled
     case unsafeExternalResource(URL)
     case sourceTooLarge(actual: Int, limit: Int)
+    case invalidDimensions(width: Int, height: Int, limit: Int)
     case decodedImageTooLarge(required: Int, limit: Int)
+    case frameCountExceeded(actual: Int, limit: Int)
+    case animationDurationExceeded(actual: TimeInterval, limit: TimeInterval)
     case allocationFailed(required: Int)
     case decodeFailed(String)
+}
+
+public struct DecodeSafetyLimits: Sendable, Equatable {
+    public let maxRasterSourceBytes: Int
+    public let maxSVGSourceBytes: Int
+    public let maxPixelDimension: Int
+    public let maxDecodedBytes: Int
+    public let maxFrameCount: Int
+    public let maxAnimationDuration: TimeInterval
+
+    public init(
+        maxRasterSourceBytes: Int = 256 * 1_024 * 1_024,
+        maxSVGSourceBytes: Int = 16 * 1_024 * 1_024,
+        maxPixelDimension: Int = 100_000,
+        maxDecodedBytes: Int = 512 * 1_024 * 1_024,
+        maxFrameCount: Int = 10_000,
+        maxAnimationDuration: TimeInterval = 24 * 60 * 60
+    ) {
+        self.maxRasterSourceBytes = max(1, maxRasterSourceBytes)
+        self.maxSVGSourceBytes = max(1, maxSVGSourceBytes)
+        self.maxPixelDimension = max(1, maxPixelDimension)
+        self.maxDecodedBytes = max(1, maxDecodedBytes)
+        self.maxFrameCount = max(1, maxFrameCount)
+        self.maxAnimationDuration = max(0.01, maxAnimationDuration)
+    }
+
+    public func validateDimensions(width: Int, height: Int) throws {
+        guard width > 0, height > 0,
+              width <= maxPixelDimension, height <= maxPixelDimension else {
+            throw ImageLoadError.invalidDimensions(
+                width: width,
+                height: height,
+                limit: maxPixelDimension
+            )
+        }
+    }
+
+    public func validateDecodedByteCount(_ byteCount: Int) throws {
+        guard byteCount > 0, byteCount <= maxDecodedBytes else {
+            throw ImageLoadError.decodedImageTooLarge(required: byteCount, limit: maxDecodedBytes)
+        }
+    }
+
+    public func validateFrameCount(_ count: Int) throws {
+        guard count > 0, count <= maxFrameCount else {
+            throw ImageLoadError.frameCountExceeded(actual: count, limit: maxFrameCount)
+        }
+    }
+
+    public func validateAnimationDuration(_ duration: TimeInterval) throws {
+        guard duration.isFinite, duration > 0, duration <= maxAnimationDuration else {
+            throw ImageLoadError.animationDurationExceeded(actual: duration, limit: maxAnimationDuration)
+        }
+    }
 }
 
 public extension ImageLoadError {

@@ -4,9 +4,17 @@ import ImageIO
 
 public struct SVGDecoder: ImageDecoding, Sendable {
     public let maxSourceBytes: Int
+    public let maxDecodedBytes: Int
+    public let maxPixelDimension: Int
 
-    public init(maxSourceBytes: Int = 16 * 1_024 * 1_024) {
+    public init(
+        maxSourceBytes: Int = 16 * 1_024 * 1_024,
+        maxDecodedBytes: Int = 512 * 1_024 * 1_024,
+        maxPixelDimension: Int = 100_000
+    ) {
         self.maxSourceBytes = max(1, maxSourceBytes)
+        self.maxDecodedBytes = max(1, maxDecodedBytes)
+        self.maxPixelDimension = max(1, maxPixelDimension)
     }
 
     public func inspect(url: URL) throws -> ImageInspection {
@@ -54,6 +62,9 @@ public struct SVGDecoder: ImageDecoding, Sendable {
         let width = Int(outputSize.width.rounded(.up))
         let height = Int(outputSize.height.rounded(.up))
         let byteCost = try ImageIODecoder.decodedByteCost(width: width, height: height, bytesPerPixel: 4)
+        guard byteCost <= maxDecodedBytes else {
+            throw ImageLoadError.decodedImageTooLarge(required: byteCost, limit: maxDecodedBytes)
+        }
         guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
               let context = CGContext(
                   data: nil,
@@ -120,6 +131,12 @@ public struct SVGDecoder: ImageDecoding, Sendable {
         guard size.width.isFinite, size.height.isFinite, size.width > 0, size.height > 0 else {
             LVSVGDocumentDestroy(document)
             throw ImageLoadError.corrupt(url)
+        }
+        let width = Int(size.width.rounded(.up))
+        let height = Int(size.height.rounded(.up))
+        guard width <= maxPixelDimension, height <= maxPixelDimension else {
+            LVSVGDocumentDestroy(document)
+            throw ImageLoadError.invalidDimensions(width: width, height: height, limit: maxPixelDimension)
         }
         return ParsedDocument(document: document, size: size, sourceByteCount: data.count)
     }

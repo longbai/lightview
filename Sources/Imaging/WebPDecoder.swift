@@ -6,24 +6,29 @@ import ImageIO
 public struct WebPDecoder: ImageDecoding, Sendable {
     public let maxSourceBytes: Int
     public let maxDecodedBytes: Int
+    public let maxPixelDimension: Int
     private let outputAllocator: @Sendable (Int) -> UnsafeMutableRawPointer?
 
     public init(
         maxSourceBytes: Int = 256 * 1_024 * 1_024,
-        maxDecodedBytes: Int = 512 * 1_024 * 1_024
+        maxDecodedBytes: Int = 512 * 1_024 * 1_024,
+        maxPixelDimension: Int = 100_000
     ) {
         self.maxSourceBytes = max(1, maxSourceBytes)
         self.maxDecodedBytes = max(1, maxDecodedBytes)
+        self.maxPixelDimension = max(1, maxPixelDimension)
         self.outputAllocator = { malloc($0) }
     }
 
     init(
         maxSourceBytes: Int = 256 * 1_024 * 1_024,
         maxDecodedBytes: Int = 512 * 1_024 * 1_024,
+        maxPixelDimension: Int = 100_000,
         outputAllocator: @escaping @Sendable (Int) -> UnsafeMutableRawPointer?
     ) {
         self.maxSourceBytes = max(1, maxSourceBytes)
         self.maxDecodedBytes = max(1, maxDecodedBytes)
+        self.maxPixelDimension = max(1, maxPixelDimension)
         self.outputAllocator = outputAllocator
     }
 
@@ -167,6 +172,13 @@ public struct WebPDecoder: ImageDecoding, Sendable {
         }
         guard status == LVWebPStatusOK, width > 0, height > 0 else {
             throw ImageLoadError.corrupt(url)
+        }
+        guard width <= maxPixelDimension, height <= maxPixelDimension else {
+            throw ImageLoadError.invalidDimensions(
+                width: Int(width),
+                height: Int(height),
+                limit: maxPixelDimension
+            )
         }
         return WebPFeatures(width: Int(width), height: Int(height), hasAlpha: hasAlpha != 0)
     }

@@ -6,16 +6,19 @@ public struct ImageIOAnimationDecoder: Sendable {
     public let maxDecodedBytes: Int
     public let maxSourceBytes: Int
     public let maxFrameCount: Int
+    public let maxAnimationDuration: TimeInterval
     private let frameDecodeObserver: (@Sendable (Int) -> Void)?
 
     public init(
         maxDecodedBytes: Int = 512 * 1_024 * 1_024,
         maxSourceBytes: Int = 256 * 1_024 * 1_024,
-        maxFrameCount: Int = 10_000
+        maxFrameCount: Int = 10_000,
+        maxAnimationDuration: TimeInterval = 24 * 60 * 60
     ) {
         self.maxDecodedBytes = max(1, maxDecodedBytes)
         self.maxSourceBytes = max(1, maxSourceBytes)
         self.maxFrameCount = max(2, maxFrameCount)
+        self.maxAnimationDuration = max(0.01, maxAnimationDuration)
         frameDecodeObserver = nil
     }
 
@@ -23,11 +26,13 @@ public struct ImageIOAnimationDecoder: Sendable {
         maxDecodedBytes: Int,
         maxSourceBytes: Int = 256 * 1_024 * 1_024,
         maxFrameCount: Int = 10_000,
+        maxAnimationDuration: TimeInterval = 24 * 60 * 60,
         frameDecodeObserver: @escaping @Sendable (Int) -> Void
     ) {
         self.maxDecodedBytes = max(1, maxDecodedBytes)
         self.maxSourceBytes = max(1, maxSourceBytes)
         self.maxFrameCount = max(2, maxFrameCount)
+        self.maxAnimationDuration = max(0.01, maxAnimationDuration)
         self.frameDecodeObserver = frameDecodeObserver
     }
 
@@ -60,7 +65,7 @@ public struct ImageIOAnimationDecoder: Sendable {
             throw ImageLoadError.decodeFailed("Image does not contain multiple animation frames")
         }
         guard frameCount <= maxFrameCount else {
-            throw ImageLoadError.decodeFailed("Animation has too many frames")
+            throw ImageLoadError.frameCountExceeded(actual: frameCount, limit: maxFrameCount)
         }
         let format = FileSignatureDetector.detect(data.prefix(FileSignatureDetector.maximumHeaderByteCount))
         guard format == .gif || format == .png || format == .webP else {
@@ -120,6 +125,13 @@ public struct ImageIOAnimationDecoder: Sendable {
             let properties = CGImageSourceCopyPropertiesAtIndex(source, index, sourceOptions)
                 as? [CFString: Any] ?? [:]
             durations.append(duration(from: properties, format: format))
+        }
+        let totalDuration = durations.reduce(0, +)
+        guard totalDuration <= maxAnimationDuration else {
+            throw ImageLoadError.animationDurationExceeded(
+                actual: totalDuration,
+                limit: maxAnimationDuration
+            )
         }
         return AnimationDescriptor(
             canvasPixelSize: CGSize(width: width, height: height),

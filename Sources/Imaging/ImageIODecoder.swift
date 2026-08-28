@@ -3,13 +3,18 @@ import Foundation
 import ImageIO
 
 public struct ImageIODecoder: ImageDecoding {
-    public init() {}
+    public let limits: DecodeSafetyLimits
+
+    public init(limits: DecodeSafetyLimits = DecodeSafetyLimits()) {
+        self.limits = limits
+    }
 
     public func inspect(url: URL) throws -> ImageInspection {
         let normalizedURL = url.standardizedFileURL
         guard FileManager.default.fileExists(atPath: normalizedURL.path) else {
             throw ImageLoadError.missing(normalizedURL)
         }
+        try validateSourceSize(url: normalizedURL)
         guard let source = makeSource(url: normalizedURL) else {
             throw ImageLoadError.corrupt(normalizedURL)
         }
@@ -29,6 +34,7 @@ public struct ImageIODecoder: ImageDecoding {
         guard FileManager.default.fileExists(atPath: url.path) else {
             throw ImageLoadError.missing(url)
         }
+        try validateSourceSize(url: url)
         guard let source = makeSource(url: url) else {
             throw ImageLoadError.corrupt(url)
         }
@@ -63,6 +69,7 @@ public struct ImageIODecoder: ImageDecoding {
             height: image.height,
             bytesPerPixel: 1
         )
+        try limits.validateDecodedByteCount(byteCost)
         return RasterAsset(
             image: image,
             originalPixelSize: inspection.orientedPixelSize,
@@ -96,6 +103,13 @@ public struct ImageIODecoder: ImageDecoding {
         return CGImageSourceCreateWithURL(url as CFURL, options)
     }
 
+    private func validateSourceSize(url: URL) throws {
+        guard let fileSize = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize else { return }
+        guard fileSize <= limits.maxRasterSourceBytes else {
+            throw ImageLoadError.sourceTooLarge(actual: fileSize, limit: limits.maxRasterSourceBytes)
+        }
+    }
+
     private func inspect(source: CGImageSource, url: URL) throws -> ImageInspection {
         guard CGImageSourceGetCount(source) > 0,
               let properties = CGImageSourceCopyPropertiesAtIndex(
@@ -110,6 +124,9 @@ public struct ImageIODecoder: ImageDecoding {
             throw ImageLoadError.corrupt(url)
         }
 
+        try limits.validateDimensions(width: width, height: height)
+        let frameCount = CGImageSourceGetCount(source)
+        try limits.validateFrameCount(frameCount)
         let orientationValue = UInt32(integer(properties[kCGImagePropertyOrientation]) ?? 1)
         let orientation = CGImagePropertyOrientation(rawValue: orientationValue) ?? .up
         let rawSize = CGSize(width: width, height: height)
@@ -131,7 +148,7 @@ public struct ImageIODecoder: ImageDecoding {
             rawPixelSize: rawSize,
             orientedPixelSize: orientedSize,
             orientation: orientation,
-            frameCount: CGImageSourceGetCount(source),
+            frameCount: frameCount,
             metadata: metadata
         )
     }

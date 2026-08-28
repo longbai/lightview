@@ -5,17 +5,20 @@ public struct WebPAnimationDecoder: Sendable {
     public let maxDecodedBytes: Int
     public let maxSourceBytes: Int
     public let maxFrameCount: Int
+    public let maxAnimationDuration: TimeInterval
     private let frameDecodeObserver: (@Sendable (Int) -> Void)?
     private let indexChunkObserver: (@Sendable () -> Void)?
 
     public init(
         maxDecodedBytes: Int = 512 * 1_024 * 1_024,
         maxSourceBytes: Int = 256 * 1_024 * 1_024,
-        maxFrameCount: Int = 10_000
+        maxFrameCount: Int = 10_000,
+        maxAnimationDuration: TimeInterval = 24 * 60 * 60
     ) {
         self.maxDecodedBytes = max(1, maxDecodedBytes)
         self.maxSourceBytes = max(1, maxSourceBytes)
         self.maxFrameCount = min(Int(Int32.max), max(2, maxFrameCount))
+        self.maxAnimationDuration = max(0.01, maxAnimationDuration)
         frameDecodeObserver = nil
         indexChunkObserver = nil
     }
@@ -24,12 +27,14 @@ public struct WebPAnimationDecoder: Sendable {
         maxDecodedBytes: Int,
         maxSourceBytes: Int = 256 * 1_024 * 1_024,
         maxFrameCount: Int = 10_000,
+        maxAnimationDuration: TimeInterval = 24 * 60 * 60,
         frameDecodeObserver: @escaping @Sendable (Int) -> Void,
         indexChunkObserver: (@Sendable () -> Void)? = nil
     ) {
         self.maxDecodedBytes = max(1, maxDecodedBytes)
         self.maxSourceBytes = max(1, maxSourceBytes)
         self.maxFrameCount = min(Int(Int32.max), max(2, maxFrameCount))
+        self.maxAnimationDuration = max(0.01, maxAnimationDuration)
         self.frameDecodeObserver = frameDecodeObserver
         self.indexChunkObserver = indexChunkObserver
     }
@@ -69,6 +74,13 @@ public struct WebPAnimationDecoder: Sendable {
         }
 
         let durations = index.frames.map { TimeInterval($0.durationMilliseconds) / 1_000 }
+        let totalDuration = durations.reduce(0, +)
+        guard totalDuration <= maxAnimationDuration else {
+            throw ImageLoadError.animationDurationExceeded(
+                actual: totalDuration,
+                limit: maxAnimationDuration
+            )
+        }
         let descriptor = AnimationDescriptor(
             canvasPixelSize: CGSize(width: canvasWidth, height: canvasHeight),
             frameDurations: durations,
@@ -283,7 +295,10 @@ private struct WebPAnimationIndex {
                     throw ImageLoadError.corrupt(url)
                 }
                 guard parsedFrames.count < maxFrameCount else {
-                    throw ImageLoadError.decodeFailed("Animation has too many frames")
+                    throw ImageLoadError.frameCountExceeded(
+                        actual: parsedFrames.count + 1,
+                        limit: maxFrameCount
+                    )
                 }
                 guard let rawX = Self.uint24(data, at: payloadStart),
                       let rawY = Self.uint24(data, at: payloadStart + 3),
