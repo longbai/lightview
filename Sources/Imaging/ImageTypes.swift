@@ -95,23 +95,67 @@ public struct RasterAsset: @unchecked Sendable {
     }
 }
 
-public struct AnimationAsset: Sendable, Equatable {
+public struct AnimationDescriptor: Sendable, Equatable {
     public let canvasPixelSize: CGSize
-    public let frameCount: Int
-    public let loopCount: Int?
     public let frameDurations: [TimeInterval]
+    public let cumulativeFrameEndTimes: [TimeInterval]
+    public let loopCount: Int?
+
+    public var frameCount: Int { frameDurations.count }
+    public var cycleDuration: TimeInterval { cumulativeFrameEndTimes.last ?? 0.10 }
 
     public init(
         canvasPixelSize: CGSize,
-        frameCount: Int,
-        loopCount: Int?,
-        frameDurations: [TimeInterval]
+        frameDurations: [TimeInterval],
+        loopCount: Int?
     ) {
-        self.canvasPixelSize = canvasPixelSize
-        self.frameCount = frameCount
-        self.loopCount = loopCount
-        self.frameDurations = frameDurations
+        let width = canvasPixelSize.width.isFinite && canvasPixelSize.width > 0 ? canvasPixelSize.width : 1
+        let height = canvasPixelSize.height.isFinite && canvasPixelSize.height > 0 ? canvasPixelSize.height : 1
+        self.canvasPixelSize = CGSize(width: width, height: height)
+        let sourceDurations = frameDurations.isEmpty ? [0.10] : frameDurations
+        self.frameDurations = sourceDurations.map { duration in
+            guard duration.isFinite, duration > 0 else { return 0.10 }
+            return min(60, max(0.01, duration))
+        }
+        var total: TimeInterval = 0
+        cumulativeFrameEndTimes = self.frameDurations.map { duration in
+            total += duration
+            return total
+        }
+        self.loopCount = loopCount.map { max(1, $0) }
     }
+}
+
+public struct AnimationFrame: @unchecked Sendable {
+    public let index: Int
+    public let image: CGImage
+    public let decodedByteCost: Int
+
+    public init(index: Int, image: CGImage, decodedByteCost: Int) {
+        self.index = index
+        self.image = image
+        self.decodedByteCost = max(0, decodedByteCost)
+    }
+}
+
+public protocol AnimationFrameProvider: Sendable {
+    var descriptor: AnimationDescriptor { get }
+    func frame(at index: Int) throws -> AnimationFrame
+}
+
+public struct AnimationAsset: Sendable {
+    public let descriptor: AnimationDescriptor
+    public let provider: any AnimationFrameProvider
+
+    public init(provider: any AnimationFrameProvider) {
+        descriptor = provider.descriptor
+        self.provider = provider
+    }
+
+    public var canvasPixelSize: CGSize { descriptor.canvasPixelSize }
+    public var frameCount: Int { descriptor.frameCount }
+    public var loopCount: Int? { descriptor.loopCount }
+    public var frameDurations: [TimeInterval] { descriptor.frameDurations }
 }
 
 public struct VectorAsset: Sendable, Equatable {
