@@ -1,0 +1,9 @@
+# name | source | scenario
+empty | no image | launch baseline
+small-png | Tests/Fixtures/Static/alpha.png | small static image
+large-jpeg | generated 12000x8000 JPEG; record SHA-256 per run | fit and actual-size memory
+folder-100 | generated copies named 0001...0100 | traversal
+animated-gif | Tests/Fixtures/Animation/disposal.gif | animation
+animated-webp | Tests/Fixtures/Animation/blend.webp | fallback animation
+path-heavy-svg | provide externally and record SHA-256 | vector rasterization
+mp4-1080p | generated from the fixed folder corpus | export
