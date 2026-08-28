@@ -21,6 +21,33 @@ public enum AnimationDurationPolicy: Sendable, Equatable {
     case maximum(CMTime)
 }
 
+public enum ExportCompositionMode: Sendable, Equatable {
+    case fit
+    case fill
+}
+
+public struct ExportColor: Sendable, Equatable {
+    public let red: CGFloat
+    public let green: CGFloat
+    public let blue: CGFloat
+    public let alpha: CGFloat
+
+    public init(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat = 1) {
+        self.red = min(1, max(0, red))
+        self.green = min(1, max(0, green))
+        self.blue = min(1, max(0, blue))
+        self.alpha = min(1, max(0, alpha))
+    }
+
+    public static let black = ExportColor(red: 0, green: 0, blue: 0)
+    public static let white = ExportColor(red: 1, green: 1, blue: 1)
+}
+
+public enum ExportBackground: @unchecked Sendable {
+    case solid(ExportColor)
+    case image(CGImage, fallback: ExportColor)
+}
+
 public struct ExportSource: Sendable, Equatable {
     public enum Content: Sendable, Equatable {
         case still
