@@ -1,0 +1,5 @@
+round	label	app_logical_bytes	app_allocated_kib	macho_bytes	architectures	version
+0	LightView	4394873	4304	3262704	x86_64 arm64	0.1.0
+0	qView	122065806	119388	3341072	x86_64 arm64	7.1
+0	Tovi-2.0.4	5359777	5380	915696	x86_64	2.0.4
+0	SimpView	2005040	1968	1154960	arm64	2026-07-31.d8a824f

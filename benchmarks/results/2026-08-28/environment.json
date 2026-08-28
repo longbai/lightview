@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-08-28T15:03:07Z",
+  "macOS": "26.6.2 (25G83)",
+  "machine": "arm64",
+  "hardware": "MacBookPro17,1, Apple M1, 16 GB",
+  "fixture": "/Users/long/Documents/ChatGPT/picview/build/benchmark/huge-12000x8000.jpg",
+  "fixtureSHA256": "b2c5dcf52af71b129c9f8d2f5bda92c5e08d343596bb04b068e96c35884af995"
+}
