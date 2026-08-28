@@ -8,12 +8,18 @@
          <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">
             <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="100000000000000000000002" BuildableName="LightViewCore.framework" BlueprintName="LightViewCore" ReferencedContainer="container:LightView.xcodeproj"/>
          </BuildActionEntry>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="100000000000000000000004" BuildableName="LightViewUITests.xctest" BlueprintName="LightViewUITests" ReferencedContainer="container:LightView.xcodeproj"/>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
       <Testables>
          <TestableReference skipped="NO">
             <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="100000000000000000000003" BuildableName="LightViewTests.xctest" BlueprintName="LightViewTests" ReferencedContainer="container:LightView.xcodeproj"/>
+         </TestableReference>
+         <TestableReference skipped="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="100000000000000000000004" BuildableName="LightViewUITests.xctest" BlueprintName="LightViewUITests" ReferencedContainer="container:LightView.xcodeproj"/>
          </TestableReference>
       </Testables>
    </TestAction>
@@ -30,4 +36,3 @@
    <AnalyzeAction buildConfiguration="Debug"/>
    <ArchiveAction buildConfiguration="Release-Direct" revealArchiveInOrganizer="YES"/>
 </Scheme>
-

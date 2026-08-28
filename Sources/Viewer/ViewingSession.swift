@@ -8,8 +8,7 @@ public enum ViewingState: Sendable {
     case failed(url: URL, error: ImageLoadError, generation: UInt64)
 }
 
-@MainActor
-public final class ViewingSession {
+public final class ViewingSession: @unchecked Sendable {
     public var onStateChange: ((ViewingState) -> Void)?
     public var catalog: FolderCatalog?
     public var navigationWraps = false
@@ -46,7 +45,7 @@ public final class ViewingSession {
         )
         publish(.loading(url: normalizedURL, generation: generation))
         activeCancellation = loader.load(request) { [weak self] result in
-            Task { @MainActor [weak self] in
+            DispatchQueue.main.async { [weak self] in
                 self?.receive(result, for: request)
             }
         }

@@ -7,12 +7,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let coordinator = AppCoordinator()
         self.coordinator = coordinator
-        coordinator.openEmptyWindow()
+        if let path = UserDefaults.standard.string(forKey: "LightViewUITestOpenPath") {
+            coordinator.open(URL(fileURLWithPath: path))
+        } else {
+            coordinator.openEmptyWindow()
+        }
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
     }
-}
 
+    func application(_ application: NSApplication, open urls: [URL]) {
+        urls.forEach { coordinator?.open($0) }
+    }
+}
