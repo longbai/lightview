@@ -1,3 +1,6 @@
 [submodule "Vendor/NanoSVG/upstream"]
 	path = Vendor/NanoSVG/upstream
 	url = https://github.com/memononen/nanosvg.git
+[submodule "Vendor/libwebp/upstream"]
+	path = Vendor/libwebp/upstream
+	url = https://chromium.googlesource.com/webm/libwebp
