@@ -26,7 +26,7 @@ final class PreferencesWindowController: NSWindowController {
             defer: false
         )
         super.init(window: window)
-        window.title = "LightView Settings"
+        window.title = L10n.text("preferences.title")
         window.center()
         window.setAccessibilityIdentifier("preferences.window")
         configureControls()

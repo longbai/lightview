@@ -366,7 +366,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             window?.title = "Couldn’t open \(url.lastPathComponent)"
             let alert = NSAlert()
             alert.alertStyle = .warning
-            alert.messageText = "Couldn’t Open Image"
+            alert.messageText = L10n.text("error.openImage")
             alert.informativeText = error.userFacingDescription
             if let window { alert.beginSheetModal(for: window) }
         }
@@ -440,8 +440,8 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private func showFolderAccessCancelledMessage() {
         let alert = NSAlert()
         alert.alertStyle = .informational
-        alert.messageText = "Folder Access Was Not Granted"
-        alert.informativeText = "The current image remains open. Open it again to request nearby-image access later."
+        alert.messageText = L10n.text("folderAccess.cancelledTitle")
+        alert.informativeText = L10n.text("folderAccess.cancelledMessage")
         if let window { alert.beginSheetModal(for: window) }
     }
 
@@ -535,7 +535,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             stopAnimation()
             let alert = NSAlert()
             alert.alertStyle = .warning
-            alert.messageText = "Couldn’t Play Animation"
+            alert.messageText = L10n.text("error.playAnimation")
             alert.informativeText = error.localizedDescription
             if let window { alert.beginSheetModal(for: window) }
         }

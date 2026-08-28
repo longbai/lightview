@@ -19,7 +19,7 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
     private let background = NSPopUpButton()
     private let chooseBackgroundButton = NSButton()
     private let progressIndicator = NSProgressIndicator()
-    private let statusLabel = NSTextField(labelWithString: "Ready")
+    private let statusLabel = NSTextField(labelWithString: L10n.text("export.ready"))
     private let exportButton = NSButton()
     private let cancelButton = NSButton()
     private let revealButton = NSButton()
@@ -38,7 +38,7 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
             defer: false
         )
         super.init(window: window)
-        window.title = "Export MP4"
+        window.title = L10n.text("export.title")
         window.delegate = self
         window.center()
         window.setAccessibilityIdentifier("export.window")
@@ -59,18 +59,18 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func configureControls() {
-        configure(sourceScope, titles: ["Current Image", "Current Folder"], identifier: "export.sourceScope")
+        configure(sourceScope, titles: [L10n.text("export.currentImage"), L10n.text("export.currentFolder")], identifier: "export.sourceScope")
         sourceScope.item(at: 1)?.isEnabled = folderURLs.count > 1
         configure(preset, titles: ["480p", "720p", "1080p"], identifier: "export.preset")
         preset.selectItem(at: 1)
-        configure(composition, titles: ["Fit", "Fill"], identifier: "export.composition")
-        configure(transition, titles: ["Fade", "Slide"], identifier: "export.transition")
+        configure(composition, titles: [L10n.text("export.fit"), L10n.text("export.fill")], identifier: "export.composition")
+        configure(transition, titles: [L10n.text("export.fade"), L10n.text("export.slide")], identifier: "export.transition")
         configure(
             animationPolicy,
-            titles: ["One Loop", "Source Loop Count", "Maximum Duration"],
+            titles: [L10n.text("export.oneLoop"), L10n.text("export.sourceLoops"), L10n.text("export.maximum")],
             identifier: "export.animationPolicy"
         )
-        configure(background, titles: ["Black", "White", "Image"], identifier: "export.background")
+        configure(background, titles: [L10n.text("export.black"), L10n.text("export.white"), L10n.text("export.image")], identifier: "export.background")
         background.target = self
         background.action = #selector(selectionChanged(_:))
         animationPolicy.target = self
@@ -85,7 +85,7 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
             field.setAccessibilityIdentifier(identifier)
         }
 
-        chooseBackgroundButton.title = "Choose Image…"
+        chooseBackgroundButton.title = L10n.text("export.chooseImage")
         chooseBackgroundButton.bezelStyle = .rounded
         chooseBackgroundButton.target = self
         chooseBackgroundButton.action = #selector(chooseBackground(_:))
@@ -97,20 +97,20 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
         progressIndicator.doubleValue = 0
         progressIndicator.setAccessibilityIdentifier("export.progress")
 
-        exportButton.title = "Export…"
+        exportButton.title = L10n.text("export.start")
         exportButton.bezelStyle = .rounded
         exportButton.keyEquivalent = "\r"
         exportButton.target = self
         exportButton.action = #selector(beginExport(_:))
         exportButton.setAccessibilityIdentifier("export.start")
 
-        cancelButton.title = "Cancel"
+        cancelButton.title = L10n.text("export.cancel")
         cancelButton.bezelStyle = .rounded
         cancelButton.target = self
         cancelButton.action = #selector(cancelOrClose(_:))
         cancelButton.setAccessibilityIdentifier("export.cancel")
 
-        revealButton.title = "Reveal in Finder"
+        revealButton.title = L10n.text("export.reveal")
         revealButton.bezelStyle = .rounded
         revealButton.target = self
         revealButton.action = #selector(revealOutput(_:))
@@ -190,7 +190,7 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
     @objc private func beginExport(_ sender: Any?) {
         guard validateDurations() else { return }
         let savePanel = NSSavePanel()
-        savePanel.title = "Export MP4"
+        savePanel.title = L10n.text("export.title")
         savePanel.nameFieldStringValue = currentURL.deletingPathExtension().lastPathComponent + ".mp4"
         if #available(macOS 11.0, *) {
             savePanel.allowedContentTypes = [.mpeg4Movie]
@@ -217,7 +217,7 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
         }
         let backgroundIndex = background.indexOfSelectedItem
         let backgroundURL = backgroundImageURL
-        setExporting(true, status: "Preparing images…")
+        setExporting(true, status: L10n.text("export.preparing"))
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
@@ -272,7 +272,7 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
             background: background,
             sourceImage: repository.image(sourceIndex:localTime:)
         )
-        statusLabel.stringValue = "Exporting…"
+        statusLabel.stringValue = L10n.text("export.exporting")
         cancellation = MovieExportCoordinator(composer: composer).start(
             plan: plan,
             destination: destination,
@@ -290,10 +290,10 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
                         self.exportedURL = destination
                         self.progressIndicator.doubleValue = 1
                         self.revealButton.isHidden = false
-                        self.setExporting(false, status: "Export complete")
-                        self.cancelButton.title = "Close"
+                        self.setExporting(false, status: L10n.text("export.complete"))
+                        self.cancelButton.title = L10n.text("export.close")
                     case .failure(.cancelled):
-                        self.setExporting(false, status: "Export cancelled")
+                        self.setExporting(false, status: L10n.text("export.cancelled"))
                     case .failure(let error):
                         self.setExporting(false, status: "Export failed: \(error)")
                     }
@@ -347,7 +347,7 @@ final class MovieExportWindowController: NSWindowController, NSWindowDelegate, N
         maximumDuration.isEnabled = !exporting && animationPolicy.indexOfSelectedItem == 2
         background.isEnabled = !exporting
         chooseBackgroundButton.isEnabled = !exporting
-        cancelButton.title = exporting ? "Cancel" : cancelButton.title
+        cancelButton.title = exporting ? L10n.text("export.cancel") : cancelButton.title
     }
 
     private func notifyCloseOnce() {

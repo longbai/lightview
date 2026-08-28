@@ -6,11 +6,16 @@ final class AppCoordinator: NSObject {
     private let preferences = PreferencesStore()
     private let pipeline = ImageLoadPipeline()
     private let systemIntegration = SystemIntegration(workspace: AppKitSystemWorkspace())
-    private let folderAccessProvider: any FolderAccessProvider = DirectFolderAccessProvider()
+    private let folderAccessProvider: any FolderAccessProvider = {
+        let channel = Bundle.main.object(forInfoDictionaryKey: "LightViewDistributionChannel") as? String
+        return channel == "app-store"
+            ? SandboxFolderAccessProvider()
+            : DirectFolderAccessProvider()
+    }()
     private var windowControllers: [ViewerWindowController] = []
     private var preferencesWindowController: PreferencesWindowController?
     private var informationWindowController: ImageInfoWindowController?
-    private let openRecentMenu = NSMenu(title: "Open Recent")
+    private let openRecentMenu = NSMenu(title: L10n.text("menu.openRecent"))
     private var backgroundCancellation: DecodeCancellation?
 
     override init() {
@@ -72,9 +77,9 @@ final class AppCoordinator: NSObject {
 
     private func authorizeFolderAccess(to requestedFolder: URL) -> AccessLease? {
         let panel = NSOpenPanel()
-        panel.title = "Allow Folder Access"
-        panel.message = "Choose this folder or one of its parent folders to browse nearby images."
-        panel.prompt = "Allow Access"
+        panel.title = L10n.text("folderAccess.title")
+        panel.message = L10n.text("folderAccess.message")
+        panel.prompt = L10n.text("folderAccess.allow")
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
@@ -120,18 +125,18 @@ final class AppCoordinator: NSObject {
         let appItem = NSMenuItem()
         main.addItem(appItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "About LightView", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
-        let preferencesItem = NSMenuItem(title: "Settings…", action: #selector(showPreferences(_:)), keyEquivalent: ",")
+        appMenu.addItem(withTitle: L10n.text("menu.about"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let preferencesItem = NSMenuItem(title: L10n.text("menu.settings"), action: #selector(showPreferences(_:)), keyEquivalent: ",")
         preferencesItem.target = self
         appMenu.addItem(preferencesItem)
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Quit LightView", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: L10n.text("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
 
         let fileMenu = NSMenu(title: "File")
         add(.newWindow, to: fileMenu, action: #selector(newWindow(_:)), target: self)
         add(.open, to: fileMenu, action: #selector(showOpenPanel(_:)), target: self)
-        let openRecentItem = NSMenuItem(title: "Open Recent", action: nil, keyEquivalent: "")
+        let openRecentItem = NSMenuItem(title: L10n.text("menu.openRecent"), action: nil, keyEquivalent: "")
         openRecentItem.submenu = openRecentMenu
         fileMenu.addItem(openRecentItem)
         fileMenu.addItem(.separator())
@@ -181,12 +186,12 @@ final class AppCoordinator: NSObject {
         append(slideshowMenu, titled: "Slideshow", to: main)
 
         let windowMenu = NSMenu(title: "Window")
-        windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
+        windowMenu.addItem(withTitle: L10n.text("menu.minimize"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         append(windowMenu, titled: "Window", to: main)
         NSApplication.shared.windowsMenu = windowMenu
 
         let helpMenu = NSMenu(title: "Help")
-        let guide = NSMenuItem(title: "LightView Keyboard & Gestures", action: #selector(showWelcomeGuide(_:)), keyEquivalent: "?")
+        let guide = NSMenuItem(title: L10n.text("menu.guide"), action: #selector(showWelcomeGuide(_:)), keyEquivalent: "?")
         guide.target = self
         helpMenu.addItem(guide)
         append(helpMenu, titled: "Help", to: main)
@@ -236,7 +241,7 @@ final class AppCoordinator: NSObject {
             openRecentMenu.addItem(item)
         }
         if openRecentMenu.items.isEmpty {
-            let empty = NSMenuItem(title: "No Recent Items", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: L10n.text("menu.noRecent"), action: nil, keyEquivalent: "")
             empty.isEnabled = false
             openRecentMenu.addItem(empty)
         }
@@ -279,6 +284,12 @@ final class AppCoordinator: NSObject {
                 self?.windowControllers.forEach { $0.setBackgroundAsset(asset) }
             }
         }
+    }
+}
+
+enum L10n {
+    static func text(_ key: String) -> String {
+        NSLocalizedString(key, tableName: nil, bundle: .main, value: key, comment: "")
     }
 }
 

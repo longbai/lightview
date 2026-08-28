@@ -20,10 +20,11 @@
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
     <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+    <key>LightViewDistributionChannel</key>
+    <string>$(LIGHTVIEW_DISTRIBUTION_CHANNEL)</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 </dict>
 </plist>
-

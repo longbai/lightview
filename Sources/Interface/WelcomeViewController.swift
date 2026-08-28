@@ -15,16 +15,16 @@ final class WelcomeViewController: NSViewController {
         let title = NSTextField(labelWithString: "LightView")
         title.font = .systemFont(ofSize: 30, weight: .semibold)
         title.alignment = .center
-        let subtitle = NSTextField(labelWithString: "Fast, native image viewing on macOS")
+        let subtitle = NSTextField(labelWithString: L10n.text("welcome.subtitle"))
         subtitle.textColor = .secondaryLabelColor
         subtitle.alignment = .center
 
-        let openButton = NSButton(title: "Open Image or Folder…", target: self, action: #selector(openPressed))
+        let openButton = NSButton(title: L10n.text("welcome.open"), target: self, action: #selector(openPressed))
         openButton.bezelStyle = .rounded
         openButton.keyEquivalent = "\r"
         openButton.setAccessibilityIdentifier("welcome.openButton")
 
-        let hint = NSTextField(labelWithString: "Drop an image or folder anywhere in this window")
+        let hint = NSTextField(labelWithString: L10n.text("welcome.drop"))
         hint.textColor = .tertiaryLabelColor
         hint.alignment = .center
 
@@ -47,7 +47,7 @@ final class WelcomeViewController: NSViewController {
         grid.rowSpacing = 7
         grid.columnSpacing = 30
 
-        let gesture = NSTextField(labelWithString: "Pinch to zoom  •  Drag to pan  •  Scroll to move")
+        let gesture = NSTextField(labelWithString: L10n.text("welcome.gestures"))
         gesture.textColor = .secondaryLabelColor
         gesture.alignment = .center
 

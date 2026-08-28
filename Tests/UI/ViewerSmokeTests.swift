@@ -11,6 +11,22 @@ final class ViewerSmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testSimplifiedChineseWelcomeLocalization() {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ApplePersistenceIgnoreState", "YES",
+            "-AppleLanguages", "(zh-Hans)",
+            "-AppleLocale", "zh_Hans_CN",
+            "-LightViewUITestEmptyWindow", "YES",
+        ]
+        app.launch()
+
+        let openButton = app.buttons["welcome.openButton"]
+        XCTAssertTrue(openButton.waitForExistence(timeout: 3))
+        XCTAssertEqual(openButton.label, "打开图片或文件夹…")
+    }
+
+    @MainActor
     func testLaunchArgumentOpensImageInNativeCanvas() throws {
         let fixtureURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("LightView-UI-Fixture.png")

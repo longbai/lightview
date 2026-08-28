@@ -11,7 +11,7 @@ final class ImageInfoWindowController: NSWindowController {
             defer: false
         )
         super.init(window: window)
-        window.title = "Image Information"
+        window.title = L10n.text("info.title")
         window.center()
         window.setAccessibilityIdentifier("information.window")
         update(model: model)
