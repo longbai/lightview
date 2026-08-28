@@ -113,7 +113,7 @@ final class AppCoordinator: NSObject {
         add(.reload, to: fileMenu, action: #selector(ViewerWindowController.reloadImage(_:)))
         add(.revealInFinder, to: fileMenu, action: #selector(ViewerWindowController.revealImageInFinder(_:)))
         fileMenu.addItem(.separator())
-        add(.exportMP4, to: fileMenu, action: #selector(NSResponder.exportMP4(_:)))
+        add(.exportMP4, to: fileMenu, action: #selector(ViewerWindowController.exportMP4(_:)))
         append(fileMenu, titled: "File", to: main)
 
         let viewMenu = NSMenu(title: "View")
@@ -263,8 +263,4 @@ private extension CommandModifiers {
         if contains(.option) { result.insert(.option) }
         return result
     }
-}
-
-@objc private extension NSResponder {
-    func exportMP4(_ sender: Any?) {}
 }
