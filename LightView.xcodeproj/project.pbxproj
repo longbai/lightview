@@ -26,6 +26,11 @@
 		200000000000000000000012 /* DirectFolderAccessProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000017 /* DirectFolderAccessProvider.swift */; };
 		200000000000000000000013 /* ViewportGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000018 /* ViewportGeometryTests.swift */; };
 		200000000000000000000014 /* ViewportGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000019 /* ViewportGeometry.swift */; };
+		200000000000000000000015 /* ImageIODecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30000000000000000000001A /* ImageIODecoderTests.swift */; };
+		200000000000000000000016 /* RasterCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30000000000000000000001B /* RasterCacheTests.swift */; };
+		200000000000000000000017 /* ImageDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30000000000000000000001C /* ImageDecoding.swift */; };
+		200000000000000000000018 /* ImageIODecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30000000000000000000001D /* ImageIODecoder.swift */; };
+		200000000000000000000019 /* RasterCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30000000000000000000001E /* RasterCache.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +63,11 @@
 		300000000000000000000017 /* DirectFolderAccessProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectFolderAccessProvider.swift; sourceTree = "<group>"; };
 		300000000000000000000018 /* ViewportGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewportGeometryTests.swift; sourceTree = "<group>"; };
 		300000000000000000000019 /* ViewportGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewportGeometry.swift; sourceTree = "<group>"; };
+		30000000000000000000001A /* ImageIODecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageIODecoderTests.swift; sourceTree = "<group>"; };
+		30000000000000000000001B /* RasterCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RasterCacheTests.swift; sourceTree = "<group>"; };
+		30000000000000000000001C /* ImageDecoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDecoding.swift; sourceTree = "<group>"; };
+		30000000000000000000001D /* ImageIODecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageIODecoder.swift; sourceTree = "<group>"; };
+		30000000000000000000001E /* RasterCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RasterCache.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,8 +87,8 @@
 		700000000000000000000008 /* Frameworks */ = {isa = PBXGroup; children = (30000000000000000000000C /* XCTest.framework */,); name = Frameworks; sourceTree = "<group>"; };
 		700000000000000000000009 /* Products */ = {isa = PBXGroup; children = (30000000000000000000000B /* LightView.app */, 30000000000000000000000A /* LightViewCore.framework */, 30000000000000000000000D /* LightViewTests.xctest */,); name = Products; sourceTree = "<group>"; };
 		70000000000000000000000A /* Viewer */ = {isa = PBXGroup; children = (300000000000000000000004 /* ViewerWindowController.swift */,); path = Viewer; sourceTree = "<group>"; };
-		70000000000000000000000B /* Unit */ = {isa = PBXGroup; children = (300000000000000000000006 /* BootstrapTests.swift */, 300000000000000000000010 /* FileSignatureDetectorTests.swift */, 300000000000000000000013 /* FolderCatalogTests.swift */, 300000000000000000000015 /* FolderAccessProviderTests.swift */, 300000000000000000000018 /* ViewportGeometryTests.swift */,); path = Unit; sourceTree = "<group>"; };
-		70000000000000000000000C /* Imaging */ = {isa = PBXGroup; children = (300000000000000000000012 /* FileSignatureDetector.swift */, 300000000000000000000011 /* ImageTypes.swift */,); path = Imaging; sourceTree = "<group>"; };
+		70000000000000000000000B /* Unit */ = {isa = PBXGroup; children = (300000000000000000000006 /* BootstrapTests.swift */, 300000000000000000000010 /* FileSignatureDetectorTests.swift */, 300000000000000000000013 /* FolderCatalogTests.swift */, 300000000000000000000015 /* FolderAccessProviderTests.swift */, 300000000000000000000018 /* ViewportGeometryTests.swift */, 30000000000000000000001A /* ImageIODecoderTests.swift */, 30000000000000000000001B /* RasterCacheTests.swift */,); path = Unit; sourceTree = "<group>"; };
+		70000000000000000000000C /* Imaging */ = {isa = PBXGroup; children = (300000000000000000000012 /* FileSignatureDetector.swift */, 30000000000000000000001C /* ImageDecoding.swift */, 30000000000000000000001D /* ImageIODecoder.swift */, 300000000000000000000011 /* ImageTypes.swift */, 30000000000000000000001E /* RasterCache.swift */,); path = Imaging; sourceTree = "<group>"; };
 		70000000000000000000000D /* Catalog */ = {isa = PBXGroup; children = (300000000000000000000014 /* FolderCatalog.swift */,); path = Catalog; sourceTree = "<group>"; };
 		70000000000000000000000E /* FileAccess */ = {isa = PBXGroup; children = (300000000000000000000016 /* FolderAccessProvider.swift */, 300000000000000000000017 /* DirectFolderAccessProvider.swift */,); path = FileAccess; sourceTree = "<group>"; };
 		70000000000000000000000F /* Canvas */ = {isa = PBXGroup; children = (300000000000000000000019 /* ViewportGeometry.swift */,); path = Canvas; sourceTree = "<group>"; };
@@ -100,8 +110,8 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		900000000000000000000001 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (200000000000000000000001 /* main.swift in Sources */, 200000000000000000000002 /* AppDelegate.swift in Sources */, 200000000000000000000003 /* AppCoordinator.swift in Sources */, 200000000000000000000004 /* ViewerWindowController.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
-		900000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (200000000000000000000005 /* LightViewCore.swift in Sources */, 20000000000000000000000A /* ProductIdentity.swift in Sources */, 200000000000000000000014 /* ViewportGeometry.swift in Sources */, 20000000000000000000000F /* FolderCatalog.swift in Sources */, 200000000000000000000011 /* FolderAccessProvider.swift in Sources */, 200000000000000000000012 /* DirectFolderAccessProvider.swift in Sources */, 20000000000000000000000D /* FileSignatureDetector.swift in Sources */, 20000000000000000000000C /* ImageTypes.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
-		900000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (200000000000000000000006 /* BootstrapTests.swift in Sources */, 20000000000000000000000B /* FileSignatureDetectorTests.swift in Sources */, 20000000000000000000000E /* FolderCatalogTests.swift in Sources */, 200000000000000000000010 /* FolderAccessProviderTests.swift in Sources */, 200000000000000000000013 /* ViewportGeometryTests.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
+		900000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (200000000000000000000005 /* LightViewCore.swift in Sources */, 20000000000000000000000A /* ProductIdentity.swift in Sources */, 200000000000000000000014 /* ViewportGeometry.swift in Sources */, 20000000000000000000000F /* FolderCatalog.swift in Sources */, 200000000000000000000011 /* FolderAccessProvider.swift in Sources */, 200000000000000000000012 /* DirectFolderAccessProvider.swift in Sources */, 20000000000000000000000D /* FileSignatureDetector.swift in Sources */, 200000000000000000000017 /* ImageDecoding.swift in Sources */, 200000000000000000000018 /* ImageIODecoder.swift in Sources */, 20000000000000000000000C /* ImageTypes.swift in Sources */, 200000000000000000000019 /* RasterCache.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
+		900000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (200000000000000000000006 /* BootstrapTests.swift in Sources */, 20000000000000000000000B /* FileSignatureDetectorTests.swift in Sources */, 20000000000000000000000E /* FolderCatalogTests.swift in Sources */, 200000000000000000000010 /* FolderAccessProviderTests.swift in Sources */, 200000000000000000000013 /* ViewportGeometryTests.swift in Sources */, 200000000000000000000015 /* ImageIODecoderTests.swift in Sources */, 200000000000000000000016 /* RasterCacheTests.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
