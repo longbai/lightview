@@ -27,6 +27,9 @@ final class SystemIntegrationTests: XCTestCase {
             frameCount: 3,
             metadata: ImageMetadata(
                 pixelSize: CGSize(width: 4_000, height: 2_000),
+                dpi: CGSize(width: 300, height: 300),
+                bitDepth: 16,
+                colorModel: "RGB",
                 colorProfileDescription: "Display P3",
                 fileByteCount: 2_048
             ),
@@ -40,8 +43,71 @@ final class SystemIntegrationTests: XCTestCase {
         XCTAssertEqual(model.value(for: .pixelSize), "4000 × 2000")
         XCTAssertEqual(model.value(for: .format), "PNG")
         XCTAssertEqual(model.value(for: .frameCount), "3")
+        XCTAssertEqual(model.value(for: .dpi), "300 × 300 DPI")
+        XCTAssertEqual(model.value(for: .bitDepth), "16-bit")
+        XCTAssertEqual(model.value(for: .colorModel), "RGB")
         XCTAssertEqual(model.value(for: .colorProfile), "Display P3")
         XCTAssertNotNil(model.value(for: .modificationDate))
+    }
+
+    func testRichViewerTitleCombinesQViewAndToviDetailsAndDistinguishesHEIC() {
+        let title = ViewerTitleFormatter.title(
+            url: URL(fileURLWithPath: "/tmp/IMG_1234.HEIC"),
+            format: .heif,
+            metadata: ImageMetadata(
+                pixelSize: CGSize(width: 6_000, height: 4_000),
+                fileByteCount: 8 * 1_024 * 1_024
+            ),
+            frameCount: 24,
+            index: 2,
+            totalCount: 42,
+            presentationScale: 0.25,
+            rotationDegrees: 90
+        )
+
+        XCTAssertEqual(
+            title,
+            "3/42 · IMG_1234.HEIC · 25% · 1000×1500 → 6000×4000 · 8 MB · HEIC · 24 frames · LightView"
+        )
+    }
+
+    func testEXIFRowsOnlyContainAvailableMeaningfulFields() {
+        let exif = ImageEXIFMetadata(
+            capturedAt: "2026:08:29 10:11:12",
+            cameraMake: "Apple",
+            cameraModel: "iPhone",
+            lensModel: "Main Camera",
+            focalLengthMM: 6.8,
+            focalLength35MM: 24,
+            aperture: 1.8,
+            exposureTimeSeconds: 1.0 / 125,
+            iso: 80,
+            latitude: 31.2304,
+            longitude: 121.4737
+        )
+        let model = ImageInformationModel(
+            url: URL(fileURLWithPath: "/tmp/photo.heic"),
+            format: .heif,
+            frameCount: 1,
+            metadata: ImageMetadata(pixelSize: CGSize(width: 4_032, height: 3_024), exif: exif),
+            creationDate: nil,
+            modificationDate: nil
+        )
+
+        XCTAssertEqual(model.exifRows.first, EXIFInformationRow(label: "Captured", value: "2026:08:29 10:11:12"))
+        XCTAssertTrue(model.exifRows.contains(EXIFInformationRow(label: "Camera", value: "Apple iPhone")))
+        XCTAssertTrue(model.exifRows.contains(EXIFInformationRow(label: "Exposure", value: "1/125 s")))
+        XCTAssertTrue(model.exifRows.contains(EXIFInformationRow(label: "GPS", value: "31.230400, 121.473700")))
+
+        let empty = ImageInformationModel(
+            url: URL(fileURLWithPath: "/tmp/plain.png"),
+            format: .png,
+            frameCount: 1,
+            metadata: ImageMetadata(pixelSize: CGSize(width: 10, height: 10)),
+            creationDate: nil,
+            modificationDate: nil
+        )
+        XCTAssertTrue(empty.exifRows.isEmpty)
     }
 
     func testAppearanceAndBackgroundPreferencesValidateStoredValues() throws {

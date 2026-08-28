@@ -130,7 +130,10 @@ LightView shall provide:
 - Reveal in Finder.
 - Open With using macOS application selection.
 - Reload file.
-- File information showing name, path, byte size, pixel dimensions, format, frame count, color profile when available, creation date, and modification date.
+- A live window title showing folder position, filename, zoom percentage, displayed and original pixel dimensions, byte size, exact format name (including HEIC versus HEIF), animation frame count when applicable, and application name.
+- File information showing name, path, byte size, pixel dimensions, format, frame count, DPI, bit depth, color model, color profile when available, creation date, and modification date.
+- Structured EXIF information when present: capture time, camera, lens, focal length, 35 mm equivalent, aperture, exposure time, ISO, exposure bias, metering, white balance, flash, software, and GPS coordinates.
+- A translucent lower-left EXIF canvas overlay toggled by a fixed shortcut. It shall not appear, and its command shall be unavailable, when the current image has no meaningful EXIF values.
 - Standard macOS application, File, View, Window, and Help menus.
 - System Recent Documents integration.
 
@@ -182,6 +185,7 @@ Initial shortcut map:
 | Fit to window | F |
 | Fill window | Shift-F |
 | Actual size | 1 |
+| Show or hide EXIF overlay | E |
 | Rotate left / right | Shift-Left / Shift-Right |
 | Horizontal / vertical flip | H / V |
 | Full screen | Control-Command-F |

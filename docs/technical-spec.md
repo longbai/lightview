@@ -190,6 +190,8 @@ The decoder shall:
 - Decode full resolution only when zoom demand exceeds the available raster and the memory budget permits it.
 - Return animation frame metadata for ImageIO-supported GIF, APNG, and WebP.
 
+ImageIO property dictionaries are normalized into a typed `ImageEXIFMetadata` value at inspection time. Empty dictionaries become `nil`; the viewer never reparses the file merely to draw EXIF. HEIC and HEIF use this same native path, while the detected file signature remains authoritative and the extension is used only to choose the user-facing HEIC/HEIF label.
+
 ### 3.8 SVG decoder and renderer
 
 NanoSVG source is vendored at a pinned version with its license. A C adapter exposes only owned opaque parse handles and plain data required by Swift.
@@ -227,6 +229,8 @@ It receives a display asset plus a `ViewportState` and is responsible for:
 - Emitting semantic zoom, pan, and navigation intentions.
 
 `ViewportGeometry` is a value-type math component tested independently from AppKit events. It defines fit, fill, actual-size, anchor-preserving zoom, panning bounds, rotation-aware dimensions, and Retina conversions.
+
+The controller derives the live title from immutable asset metadata plus current catalog and viewport state. The canvas owns a noninteractive `NSVisualEffectView` EXIF overlay, updates it only with already-formatted rows, and hides it for an empty row set. This keeps metadata extraction out of drawing and avoids WebKit or helper processes.
 
 Integral zoom levels use nearest-neighbor filtering when pixel-sharp mode is active. Reduction and fractional zoom use high-quality interpolation.
 
@@ -278,6 +282,8 @@ Interface controllers are conventional AppKit controllers:
 - `MovieExportWindowController`
 
 The welcome keyboard map is built from the same immutable `CommandCatalog` used to construct menus, preventing documentation and menu shortcuts from diverging.
+
+`ImageInfoWindowController` presents independently selectable File & Image and EXIF sections in a native scrolling AppKit panel. `EXIFInformationFormatter` is shared with the overlay so field availability and formatting cannot diverge.
 
 Preferences are stored in `UserDefaults` using typed keys and validated ranges. Direct and App Store editions use the same schema, though their containers may store values separately.
 

@@ -17,6 +17,69 @@ public enum ImageFormat: String, CaseIterable, Sendable {
     case unknown
 }
 
+public struct ImageEXIFMetadata: Sendable, Equatable {
+    public let capturedAt: String?
+    public let cameraMake: String?
+    public let cameraModel: String?
+    public let lensModel: String?
+    public let focalLengthMM: Double?
+    public let focalLength35MM: Int?
+    public let aperture: Double?
+    public let exposureTimeSeconds: Double?
+    public let iso: Int?
+    public let exposureBiasEV: Double?
+    public let meteringMode: Int?
+    public let whiteBalance: Int?
+    public let flash: Int?
+    public let software: String?
+    public let latitude: Double?
+    public let longitude: Double?
+
+    public init(
+        capturedAt: String? = nil,
+        cameraMake: String? = nil,
+        cameraModel: String? = nil,
+        lensModel: String? = nil,
+        focalLengthMM: Double? = nil,
+        focalLength35MM: Int? = nil,
+        aperture: Double? = nil,
+        exposureTimeSeconds: Double? = nil,
+        iso: Int? = nil,
+        exposureBiasEV: Double? = nil,
+        meteringMode: Int? = nil,
+        whiteBalance: Int? = nil,
+        flash: Int? = nil,
+        software: String? = nil,
+        latitude: Double? = nil,
+        longitude: Double? = nil
+    ) {
+        self.capturedAt = capturedAt
+        self.cameraMake = cameraMake
+        self.cameraModel = cameraModel
+        self.lensModel = lensModel
+        self.focalLengthMM = focalLengthMM
+        self.focalLength35MM = focalLength35MM
+        self.aperture = aperture
+        self.exposureTimeSeconds = exposureTimeSeconds
+        self.iso = iso
+        self.exposureBiasEV = exposureBiasEV
+        self.meteringMode = meteringMode
+        self.whiteBalance = whiteBalance
+        self.flash = flash
+        self.software = software
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+
+    public var hasMeaningfulValues: Bool {
+        capturedAt != nil || cameraMake != nil || cameraModel != nil || lensModel != nil
+            || focalLengthMM != nil || focalLength35MM != nil || aperture != nil
+            || exposureTimeSeconds != nil || iso != nil || exposureBiasEV != nil
+            || meteringMode != nil || whiteBalance != nil || flash != nil || software != nil
+            || latitude != nil || longitude != nil
+    }
+}
+
 public struct ImageMetadata: Sendable, Equatable {
     public let pixelSize: CGSize
     public let dpi: CGSize?
@@ -25,6 +88,7 @@ public struct ImageMetadata: Sendable, Equatable {
     public let colorProfileDescription: String?
     public let fileByteCount: Int64?
     public let properties: [String: String]
+    public let exif: ImageEXIFMetadata?
 
     public init(
         pixelSize: CGSize,
@@ -33,7 +97,8 @@ public struct ImageMetadata: Sendable, Equatable {
         colorModel: String? = nil,
         colorProfileDescription: String? = nil,
         fileByteCount: Int64? = nil,
-        properties: [String: String] = [:]
+        properties: [String: String] = [:],
+        exif: ImageEXIFMetadata? = nil
     ) {
         self.pixelSize = pixelSize
         self.dpi = dpi
@@ -42,6 +107,7 @@ public struct ImageMetadata: Sendable, Equatable {
         self.colorProfileDescription = colorProfileDescription
         self.fileByteCount = fileByteCount
         self.properties = properties
+        self.exif = exif?.hasMeaningfulValues == true ? exif : nil
     }
 }
 

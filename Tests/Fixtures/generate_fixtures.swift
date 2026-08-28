@@ -62,3 +62,27 @@ try write(
     type: "public.png",
     properties: [:]
 )
+
+let heic = try makeImage(width: 64, height: 48, alpha: false)
+try write(
+    heic,
+    to: outputDirectory.appendingPathComponent("exif.heic"),
+    type: "public.heic",
+    properties: [
+        kCGImageDestinationLossyCompressionQuality: 0.8,
+        kCGImagePropertyTIFFDictionary: [
+            kCGImagePropertyTIFFMake: "LightView",
+            kCGImagePropertyTIFFModel: "Fixture Camera",
+            kCGImagePropertyTIFFSoftware: "LightView fixture generator",
+        ],
+        kCGImagePropertyExifDictionary: [
+            kCGImagePropertyExifDateTimeOriginal: "2026:08:29 10:11:12",
+            kCGImagePropertyExifLensModel: "Fixture 24mm",
+            kCGImagePropertyExifFocalLength: 6.8,
+            kCGImagePropertyExifFocalLenIn35mmFilm: 24,
+            kCGImagePropertyExifFNumber: 1.8,
+            kCGImagePropertyExifExposureTime: 0.008,
+            kCGImagePropertyExifISOSpeedRatings: [100],
+        ],
+    ]
+)

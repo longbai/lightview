@@ -26,6 +26,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private var currentImageAccessLease: AccessLease?
     private var folderAccessLease: AccessLease?
     private var folderNavigationDenied = false
+    private var exifOverlayRequested = false
     private lazy var slideshowController = SlideshowController { [weak self] direction in
         MainActor.assumeIsolated { self?.session.navigate(direction) ?? false }
     }
@@ -63,6 +64,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         window.title = "LightView"
         container.onOpenURL = { [weak self] url in self?.open(url) }
         canvas.onFullResolutionRequest = { [weak self] in self?.loadCurrentImageAtFullResolution() }
+        canvas.onPresentationChange = { [weak self] in self?.updatePresentationChrome() }
         window.contentView = container
         welcome.onOpen = { [weak self] in self?.onOpenPanelRequest() }
         session.navigationWraps = preferences.navigationWraps
@@ -113,6 +115,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         slideshowController.stop()
         stopAnimation()
         canvas.clearImage()
+        canvas.setEXIFOverlay(rows: nil)
         embed(welcome.view)
         window?.title = "LightView"
     }
@@ -121,6 +124,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         slideshowController.stop()
         stopAnimation()
         canvas.clearImage()
+        canvas.setEXIFOverlay(rows: nil)
         embed(canvas)
         window?.title = "LightView"
         window?.makeFirstResponder(canvas)
@@ -141,6 +145,11 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     @objc func fitToWindow(_ sender: Any?) { canvas.setMode(.fit) }
     @objc func fillWindow(_ sender: Any?) { canvas.setMode(.fill) }
     @objc func actualSize(_ sender: Any?) { canvas.setMode(.actualSize) }
+    @objc func toggleEXIFOverlay(_ sender: Any?) {
+        guard !currentEXIFRows.isEmpty else { return }
+        exifOverlayRequested.toggle()
+        updatePresentationChrome()
+    }
     @objc func rotateLeft(_ sender: Any?) { canvas.rotate(by: -90) }
     @objc func rotateRight(_ sender: Any?) { canvas.rotate(by: 90) }
     @objc func flipHorizontal(_ sender: Any?) { canvas.viewportState.isFlippedHorizontally.toggle() }
@@ -309,6 +318,14 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             menuItem.title = animationIsPlaying ? "Pause Animation" : "Play Animation"
         }
         if animationActions.contains(action) { return animationWorker != nil }
+        if action == #selector(toggleEXIFOverlay(_:)) {
+            let hasEXIF = !currentEXIFRows.isEmpty
+            if let menuItem = item as? NSMenuItem {
+                menuItem.title = exifOverlayRequested ? "Hide EXIF Overlay" : "Show EXIF Overlay"
+                menuItem.state = exifOverlayRequested && hasEXIF ? .on : .off
+            }
+            return hasEXIF
+        }
         if action == #selector(toggleSlideshow(_:)), let menuItem = item as? NSMenuItem {
             menuItem.title = slideshowController.state == .stopped ? "Start Slideshow" : "Stop Slideshow"
             menuItem.state = slideshowController.activeDirection == .next ? .on : .off
@@ -358,8 +375,9 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             showWelcome()
         case .loading(let url, _):
             stopAnimation()
+            canvas.setEXIFOverlay(rows: nil)
             window?.title = "Loading \(url.lastPathComponent)…"
-        case .presenting(let url, let asset, _):
+        case .presenting(_, let asset, _):
             stopAnimation()
             resizeWindowIfNeeded(for: asset)
             switch asset {
@@ -371,7 +389,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
                 canvas.clearImage()
             }
             embed(canvas)
-            window?.title = title(for: url)
+            updatePresentationChrome()
             window?.makeFirstResponder(canvas)
             if showsInformationAfterNextPresentation {
                 showsInformationAfterNextPresentation = false
@@ -379,6 +397,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             }
         case .failed(let url, let error, _):
             showsInformationAfterNextPresentation = false
+            canvas.setEXIFOverlay(rows: nil)
             showWelcome()
             window?.title = "Couldn’t open \(url.lastPathComponent)"
             let alert = NSAlert()
@@ -389,9 +408,29 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         }
     }
 
-    private func title(for url: URL) -> String {
-        guard let catalog = session.catalog, let index = catalog.index(of: url) else { return url.lastPathComponent }
-        return "\(url.lastPathComponent) — \(index + 1) / \(catalog.entries.count)"
+    private var currentEXIFRows: [EXIFInformationRow] {
+        EXIFInformationFormatter.rows(for: session.currentAsset?.metadata.exif)
+    }
+
+    private func updatePresentationChrome() {
+        guard let url = session.currentURL, let asset = session.currentAsset else {
+            canvas.setEXIFOverlay(rows: nil)
+            return
+        }
+        let catalog = session.catalog
+        let index = catalog?.index(of: url)
+        let scale = canvas.scaleForPresentation(of: asset.metadata.pixelSize) ?? 1
+        window?.title = ViewerTitleFormatter.title(
+            url: url,
+            format: asset.format,
+            metadata: asset.metadata,
+            frameCount: asset.frameCount,
+            index: index,
+            totalCount: catalog?.entries.count,
+            presentationScale: scale,
+            rotationDegrees: canvas.viewportState.rotationDegrees
+        )
+        canvas.setEXIFOverlay(rows: exifOverlayRequested ? currentEXIFRows : nil)
     }
 
     private func loadCurrentImageAtFullResolution() {
@@ -520,13 +559,14 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         #selector(previousImage(_:)), #selector(nextImage(_:)), #selector(firstImage(_:)),
         #selector(lastImage(_:)), #selector(zoomIn(_:)), #selector(zoomOut(_:)),
         #selector(fitToWindow(_:)), #selector(fillWindow(_:)), #selector(actualSize(_:)),
+        #selector(toggleEXIFOverlay(_:)),
         #selector(rotateLeft(_:)), #selector(rotateRight(_:)), #selector(flipHorizontal(_:)),
         #selector(flipVertical(_:)), #selector(toggleViewerFullScreen(_:)),
         #selector(reloadImage(_:)), #selector(revealImageInFinder(_:)),
         #selector(openImageWith(_:)), #selector(showImageInformation(_:)), #selector(exportMP4(_:)),
         #selector(toggleAnimationPlayback(_:)), #selector(previousAnimationFrame(_:)),
         #selector(nextAnimationFrame(_:)), #selector(decreaseAnimationSpeed(_:)),
-        #selector(increaseAnimationSpeed(_:)), #selector(toggleSlideshow(_:)),
+        #selector(normalAnimationSpeed(_:)), #selector(increaseAnimationSpeed(_:)), #selector(toggleSlideshow(_:)),
         #selector(startReverseSlideshow(_:)), #selector(toggleSlideshowPause(_:)),
     ]
 

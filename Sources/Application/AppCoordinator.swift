@@ -176,6 +176,7 @@ final class AppCoordinator: NSObject {
         add(.fit, to: viewMenu, action: #selector(ViewerWindowController.fitToWindow(_:)))
         add(.fill, to: viewMenu, action: #selector(ViewerWindowController.fillWindow(_:)))
         add(.actualSize, to: viewMenu, action: #selector(ViewerWindowController.actualSize(_:)))
+        add(.toggleEXIFOverlay, to: viewMenu, action: #selector(ViewerWindowController.toggleEXIFOverlay(_:)))
         viewMenu.addItem(.separator())
         add(.rotateLeft, to: viewMenu, action: #selector(ViewerWindowController.rotateLeft(_:)))
         add(.rotateRight, to: viewMenu, action: #selector(ViewerWindowController.rotateRight(_:)))

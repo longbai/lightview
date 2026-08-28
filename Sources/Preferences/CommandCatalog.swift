@@ -13,6 +13,7 @@ public enum CommandIdentifier: String, CaseIterable, Hashable, Sendable {
     case fit
     case fill
     case actualSize
+    case toggleEXIFOverlay
     case rotateLeft
     case rotateRight
     case flipHorizontal
@@ -83,6 +84,7 @@ public enum CommandCatalog {
         .init(identifier: .fit, title: "Fit to Window", keyEquivalent: "f", shortcutDescription: "F"),
         .init(identifier: .fill, title: "Fill Window", keyEquivalent: "f", modifiers: .shift, shortcutDescription: "⇧F"),
         .init(identifier: .actualSize, title: "Actual Size", keyEquivalent: "1", shortcutDescription: "1"),
+        .init(identifier: .toggleEXIFOverlay, title: "Show EXIF Overlay", keyEquivalent: "e", shortcutDescription: "E"),
         .init(identifier: .rotateLeft, title: "Rotate Left", keyEquivalent: "\u{F702}", modifiers: .shift, shortcutDescription: "⇧←"),
         .init(identifier: .rotateRight, title: "Rotate Right", keyEquivalent: "\u{F703}", modifiers: .shift, shortcutDescription: "⇧→"),
         .init(identifier: .flipHorizontal, title: "Flip Horizontal", keyEquivalent: "h", shortcutDescription: "H"),

@@ -7,7 +7,8 @@ The current code is a release candidate, not a notarized public release. It buil
 ## Highlights
 
 - Native multiwindow viewer with drag and drop, Open Recent, Finder open events, and non-recursive folder navigation.
-- Fit, fill, actual size, pointer-anchored zoom, pan, rotate, flip, full screen, and current folder position in the window title.
+- Fit, fill, actual size, pointer-anchored zoom, pan, rotate, flip, and full screen. The live window title shows folder position, filename, zoom, displayed/original dimensions, file size, format, and animation frame count when applicable.
+- Structured EXIF display for ImageIO formats, including HEIC: press **E** for a translucent canvas overlay, or **Command-I** for the complete File & Image / EXIF information window. Images without meaningful EXIF never show an empty overlay.
 - Static ImageIO formats, safe NanoSVG-based SVG rendering, static/animated WebP fallback through decoder-only libwebp, plus GIF and APNG playback.
 - Forward/reverse slideshow and silent H.264 MP4 export at 480p, 720p, or 1080p with fit/fill, backgrounds, slide/fade transitions, progress, and cancellation.
 - Typed AppKit preferences for appearance, background, folder order, wrapping, preload, zoom, slideshow interval, energy saving, window resize, and welcome-guide visibility.
@@ -39,6 +40,7 @@ See [compatibility-matrix.md](docs/compatibility-matrix.md) for the distinction 
 | First / last | Command-Left / Command-Right |
 | Zoom in / out | Plus / Minus |
 | Fit / fill / actual size | F / Shift-F / 1 |
+| Show or hide EXIF overlay | E |
 | Rotate left / right | Shift-Left / Shift-Right |
 | Flip horizontal / vertical | H / V |
 | Full screen | Control-Command-F |

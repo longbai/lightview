@@ -4,17 +4,22 @@ import LightViewCore
 @MainActor
 final class ImageCanvasView: NSView {
     var onFullResolutionRequest: (() -> Void)?
+    var onPresentationChange: (() -> Void)?
     var asset: RasterAsset? {
         didSet {
             hasRequestedFullResolution = false
             animationImage = nil
             animationPixelSize = nil
             needsDisplay = true
+            onPresentationChange?()
             requestHigherResolutionIfNeeded()
         }
     }
     var viewportState = ViewportState() {
-        didSet { needsDisplay = true }
+        didSet {
+            needsDisplay = true
+            onPresentationChange?()
+        }
     }
     var viewerBackgroundColor: NSColor = .black {
         didSet { needsDisplay = true }
@@ -28,6 +33,7 @@ final class ImageCanvasView: NSView {
     private var animationImage: CGImage?
     private var animationPixelSize: CGSize?
     private var hasRequestedFullResolution = false
+    private let exifOverlay = EXIFOverlayView()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -35,11 +41,23 @@ final class ImageCanvasView: NSView {
         setAccessibilityElement(true)
         setAccessibilityRole(.group)
         setAccessibilityIdentifier("viewer.canvas")
+        exifOverlay.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(exifOverlay)
+        NSLayoutConstraint.activate([
+            exifOverlay.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 18),
+            exifOverlay.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -18),
+            exifOverlay.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -18),
+        ])
     }
 
     required init?(coder: NSCoder) { nil }
 
     override var acceptsFirstResponder: Bool { true }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        onPresentationChange?()
+    }
 
     override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
@@ -178,6 +196,7 @@ final class ImageCanvasView: NSView {
         animationImage = frame.image
         animationPixelSize = canvasPixelSize
         needsDisplay = true
+        onPresentationChange?()
     }
 
     func clearImage() {
@@ -185,6 +204,15 @@ final class ImageCanvasView: NSView {
         animationImage = nil
         animationPixelSize = nil
         needsDisplay = true
+        onPresentationChange?()
+    }
+
+    func setEXIFOverlay(rows: [EXIFInformationRow]?) {
+        exifOverlay.update(rows: rows ?? [])
+    }
+
+    func scaleForPresentation(of imageSize: CGSize) -> CGFloat? {
+        presentationScale(for: imageSize)
     }
 
     private var displayedImage: CGImage? { animationImage ?? asset?.image }
@@ -214,5 +242,71 @@ final class ImageCanvasView: NSView {
               ) else { return }
         hasRequestedFullResolution = true
         onFullResolutionRequest?()
+    }
+}
+
+@MainActor
+private final class EXIFOverlayView: NSVisualEffectView {
+    private var displayedRows: [EXIFInformationRow] = []
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        material = .hudWindow
+        blendingMode = .withinWindow
+        state = .active
+        wantsLayer = true
+        layer?.cornerRadius = 10
+        layer?.masksToBounds = true
+        isHidden = true
+        setAccessibilityIdentifier("viewer.exifOverlay")
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    func update(rows: [EXIFInformationRow]) {
+        guard rows != displayedRows else { return }
+        displayedRows = rows
+        subviews.forEach { $0.removeFromSuperview() }
+        guard !rows.isEmpty else {
+            isHidden = true
+            return
+        }
+
+        let heading = NSTextField(labelWithString: "EXIF")
+        heading.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+        heading.textColor = .labelColor
+        let gridRows = rows.map { row -> [NSView] in
+            let label = NSTextField(labelWithString: row.label)
+            label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+            label.textColor = .secondaryLabelColor
+            label.alignment = .right
+            let value = NSTextField(labelWithString: row.value)
+            value.font = .monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+            value.textColor = .labelColor
+            value.lineBreakMode = .byTruncatingMiddle
+            return [label, value]
+        }
+        let grid = NSGridView(views: gridRows)
+        grid.column(at: 0).xPlacement = .trailing
+        grid.column(at: 1).xPlacement = .leading
+        grid.rowSpacing = 4
+        grid.columnSpacing = 10
+        let stack = NSStackView(views: [heading, grid])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 7
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            stack.topAnchor.constraint(equalTo: topAnchor, constant: 10),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10),
+            stack.widthAnchor.constraint(lessThanOrEqualToConstant: 440),
+        ])
+        isHidden = false
+        setAccessibilityLabel("EXIF metadata")
     }
 }

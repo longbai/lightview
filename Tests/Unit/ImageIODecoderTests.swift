@@ -65,6 +65,51 @@ final class ImageIODecoderTests: XCTestCase {
         }
     }
 
+    func testExtractsStructuredEXIFFromImageIOProperties() throws {
+        let properties: [CFString: Any] = [
+            kCGImagePropertyTIFFDictionary: [
+                kCGImagePropertyTIFFMake: "Apple",
+                kCGImagePropertyTIFFModel: "iPhone 15 Pro",
+                kCGImagePropertyTIFFSoftware: "Camera",
+            ],
+            kCGImagePropertyExifDictionary: [
+                kCGImagePropertyExifDateTimeOriginal: "2026:08:29 10:11:12",
+                kCGImagePropertyExifLensModel: "iPhone 15 Pro back camera",
+                kCGImagePropertyExifFocalLength: 6.8,
+                kCGImagePropertyExifFocalLenIn35mmFilm: 24,
+                kCGImagePropertyExifFNumber: 1.8,
+                kCGImagePropertyExifExposureTime: 0.008,
+                kCGImagePropertyExifISOSpeedRatings: [80],
+            ],
+            kCGImagePropertyGPSDictionary: [
+                kCGImagePropertyGPSLatitude: 31.2304,
+                kCGImagePropertyGPSLatitudeRef: "N",
+                kCGImagePropertyGPSLongitude: 121.4737,
+                kCGImagePropertyGPSLongitudeRef: "E",
+            ],
+        ]
+
+        let exif = try XCTUnwrap(ImageIODecoder.exifMetadata(from: properties))
+        XCTAssertEqual(exif.cameraMake, "Apple")
+        XCTAssertEqual(exif.cameraModel, "iPhone 15 Pro")
+        XCTAssertEqual(exif.lensModel, "iPhone 15 Pro back camera")
+        XCTAssertEqual(exif.iso, 80)
+        XCTAssertEqual(try XCTUnwrap(exif.latitude), 31.2304, accuracy: 0.000_001)
+        XCTAssertEqual(try XCTUnwrap(exif.longitude), 121.4737, accuracy: 0.000_001)
+    }
+
+    func testInspectsRealHEICFixtureWithEXIF() throws {
+        let inspection = try ImageIODecoder().inspect(url: fixtureURL("exif.heic"))
+
+        XCTAssertEqual(inspection.format, .heif)
+        XCTAssertEqual(inspection.metadata.pixelSize, CGSize(width: 64, height: 48))
+        let exif = try XCTUnwrap(inspection.metadata.exif)
+        XCTAssertEqual(exif.cameraMake, "LightView")
+        XCTAssertEqual(exif.cameraModel, "Fixture Camera")
+        XCTAssertEqual(exif.lensModel, "Fixture 24mm")
+        XCTAssertEqual(exif.iso, 100)
+    }
+
     private func fixtureURL(_ name: String) -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

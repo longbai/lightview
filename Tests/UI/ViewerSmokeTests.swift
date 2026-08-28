@@ -68,6 +68,31 @@ final class ViewerSmokeTests: XCTestCase {
     }
 
     @MainActor
+    func testEXIFOverlayTogglesForHEICAndHidesForImageWithoutEXIF() {
+        let fixtureURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/Static/exif.heic")
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ApplePersistenceIgnoreState", "YES",
+            "-LightViewUITestOpenPath", fixtureURL.path,
+        ]
+        app.launch()
+
+        XCTAssertTrue(app.groups["viewer.canvas"].waitForExistence(timeout: 3))
+        let overlay = app.descendants(matching: .any)["viewer.exifOverlay"]
+        XCTAssertFalse(overlay.exists)
+
+        app.typeKey("e", modifierFlags: [])
+        XCTAssertTrue(overlay.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Fixture Camera"].exists)
+
+        app.typeKey(XCUIKeyboardKey.rightArrow.rawValue, modifierFlags: [])
+        XCTAssertTrue(overlay.waitForNonExistence(timeout: 3))
+    }
+
+    @MainActor
     func testClosingLastViewerDisablesViewerMenuTargets() throws {
         let folderURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("LightView-UI-Menu-Lifecycle", isDirectory: true)

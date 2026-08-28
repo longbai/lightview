@@ -141,7 +141,8 @@ public struct ImageIODecoder: ImageDecoding {
             colorModel: properties[kCGImagePropertyColorModel] as? String,
             colorProfileDescription: properties[kCGImagePropertyProfileName] as? String,
             fileByteCount: resourceValues?.fileSize.map(Int64.init),
-            properties: ["sourceOrientation": String(orientation.rawValue)]
+            properties: ["sourceOrientation": String(orientation.rawValue)],
+            exif: Self.exifMetadata(from: properties)
         )
         return ImageInspection(
             format: detectFormat(url: url),
@@ -170,6 +171,52 @@ public struct ImageIODecoder: ImageDecoding {
             return nil
         }
         return CGSize(width: width, height: height)
+    }
+
+    static func exifMetadata(from properties: [CFString: Any]) -> ImageEXIFMetadata? {
+        let tiff = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any] ?? [:]
+        let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any] ?? [:]
+        let gps = properties[kCGImagePropertyGPSDictionary] as? [CFString: Any] ?? [:]
+
+        func string(_ dictionary: [CFString: Any], _ key: CFString) -> String? {
+            guard let value = dictionary[key] as? String else { return nil }
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        func double(_ dictionary: [CFString: Any], _ key: CFString) -> Double? {
+            (dictionary[key] as? NSNumber)?.doubleValue
+        }
+        func integer(_ dictionary: [CFString: Any], _ key: CFString) -> Int? {
+            (dictionary[key] as? NSNumber)?.intValue
+        }
+        func coordinate(_ dictionary: [CFString: Any], value: CFString, reference: CFString) -> Double? {
+            guard let raw = double(dictionary, value), raw.isFinite else { return nil }
+            let ref = string(dictionary, reference)?.uppercased()
+            return ref == "S" || ref == "W" ? -abs(raw) : abs(raw)
+        }
+
+        let iso = (exif[kCGImagePropertyExifISOSpeedRatings] as? [NSNumber])?.first?.intValue
+        let result = ImageEXIFMetadata(
+            capturedAt: string(exif, kCGImagePropertyExifDateTimeOriginal)
+                ?? string(exif, kCGImagePropertyExifDateTimeDigitized)
+                ?? string(tiff, kCGImagePropertyTIFFDateTime),
+            cameraMake: string(tiff, kCGImagePropertyTIFFMake),
+            cameraModel: string(tiff, kCGImagePropertyTIFFModel),
+            lensModel: string(exif, kCGImagePropertyExifLensModel),
+            focalLengthMM: double(exif, kCGImagePropertyExifFocalLength),
+            focalLength35MM: integer(exif, kCGImagePropertyExifFocalLenIn35mmFilm),
+            aperture: double(exif, kCGImagePropertyExifFNumber),
+            exposureTimeSeconds: double(exif, kCGImagePropertyExifExposureTime),
+            iso: iso,
+            exposureBiasEV: double(exif, kCGImagePropertyExifExposureBiasValue),
+            meteringMode: integer(exif, kCGImagePropertyExifMeteringMode),
+            whiteBalance: integer(exif, kCGImagePropertyExifWhiteBalance),
+            flash: integer(exif, kCGImagePropertyExifFlash),
+            software: string(tiff, kCGImagePropertyTIFFSoftware),
+            latitude: coordinate(gps, value: kCGImagePropertyGPSLatitude, reference: kCGImagePropertyGPSLatitudeRef),
+            longitude: coordinate(gps, value: kCGImagePropertyGPSLongitude, reference: kCGImagePropertyGPSLongitudeRef)
+        )
+        return result.hasMeaningfulValues ? result : nil
     }
 }
 
