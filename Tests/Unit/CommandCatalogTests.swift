@@ -20,6 +20,8 @@ final class CommandCatalogTests: XCTestCase {
         XCTAssertEqual(shortcuts[.fill], "⇧F")
         XCTAssertEqual(shortcuts[.actualSize], "1")
         XCTAssertEqual(shortcuts[.togglePlayback], "Space")
+        XCTAssertEqual(shortcuts[.toggleSlideshow], "Return")
+        XCTAssertEqual(shortcuts[.startReverseSlideshow], "⇧Return")
         XCTAssertEqual(shortcuts[.exportMP4], "⌘E")
     }
 }

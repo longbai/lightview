@@ -12,6 +12,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private let onOpenPanelRequest: () -> Void
     private let systemIntegration: SystemIntegration
     private let onShowInformation: (ImageInformationModel) -> Void
+    private let onClose: (ViewerWindowController) -> Void
     private var showsInformationAfterNextPresentation = false
     private var animationWorker: AnimationPlaybackWorker?
     private var animationCanvasPixelSize: CGSize?
@@ -19,19 +20,24 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private var animationIsPlaying = false
     private var animationSpeed = 1.0
     private var resumesAnimationAfterOcclusion = false
+    private lazy var slideshowController = SlideshowController { [weak self] direction in
+        MainActor.assumeIsolated { self?.session.navigate(direction) ?? false }
+    }
 
     init(
         session: ViewingSession,
         preferences: PreferencesStore,
         systemIntegration: SystemIntegration,
         onOpenPanelRequest: @escaping () -> Void,
-        onShowInformation: @escaping (ImageInformationModel) -> Void
+        onShowInformation: @escaping (ImageInformationModel) -> Void,
+        onClose: @escaping (ViewerWindowController) -> Void
     ) {
         self.session = session
         self.preferences = preferences
         self.systemIntegration = systemIntegration
         self.onOpenPanelRequest = onOpenPanelRequest
         self.onShowInformation = onShowInformation
+        self.onClose = onClose
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 820, height: 620),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
@@ -56,6 +62,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     required init?(coder: NSCoder) { nil }
 
     func open(_ url: URL) {
+        slideshowController.manualNavigationOccurred()
         do {
             var isDirectory: ObjCBool = false
             FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
@@ -81,18 +88,21 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     }
 
     func showWelcome() {
+        slideshowController.stop()
         stopAnimation()
         canvas.clearImage()
         embed(welcome.view)
         window?.title = "LightView"
     }
 
-    @objc func previousImage(_ sender: Any?) { session.navigate(.previous) }
-    @objc func nextImage(_ sender: Any?) { session.navigate(.next) }
+    @objc func previousImage(_ sender: Any?) { navigateManually(.previous) }
+    @objc func nextImage(_ sender: Any?) { navigateManually(.next) }
     @objc func firstImage(_ sender: Any?) {
+        slideshowController.manualNavigationOccurred()
         if let entry = session.catalog?.entries.first { session.open(entry.url, targetPixelSize: decodeTargetSize) }
     }
     @objc func lastImage(_ sender: Any?) {
+        slideshowController.manualNavigationOccurred()
         if let entry = session.catalog?.entries.last { session.open(entry.url, targetPixelSize: decodeTargetSize) }
     }
     @objc func zoomIn(_ sender: Any?) { canvas.zoom(by: preferences.zoomStep) }
@@ -123,12 +133,31 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     @objc func increaseAnimationSpeed(_ sender: Any?) {
         setAnimationSpeed(animationSpeed * 2)
     }
+    @objc func toggleSlideshow(_ sender: Any?) {
+        if slideshowController.state == .stopped {
+            startSlideshow(direction: .next)
+        } else {
+            slideshowController.stop()
+        }
+    }
+    @objc func startReverseSlideshow(_ sender: Any?) {
+        startSlideshow(direction: .previous)
+    }
+    @objc func toggleSlideshowPause(_ sender: Any?) {
+        switch slideshowController.state {
+        case .running: slideshowController.pause()
+        case .paused: slideshowController.resume()
+        case .stopped: break
+        }
+    }
     @objc func revealImageInFinder(_ sender: Any?) {
         guard let url = session.currentURL else { return }
         systemIntegration.revealInFinder(url)
     }
     @objc func openImageWith(_ sender: Any?) {
         guard let url = session.currentURL else { return }
+        let restoresSlideshow = suspendSlideshowForModalPanel()
+        defer { restoreSlideshowAfterModalPanel(ifNeeded: restoresSlideshow) }
         let panel = NSOpenPanel()
         panel.title = "Choose an Application"
         panel.prompt = "Open With"
@@ -174,6 +203,10 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         refreshForDisplayChange()
     }
 
+    func windowDidBecomeKey(_ notification: Notification) {
+        bindViewerMenuTargets(in: NSApplication.shared.mainMenu)
+    }
+
     func windowDidChangeOcclusionState(_ notification: Notification) {
         if window?.occlusionState.contains(.visible) == true {
             if resumesAnimationAfterOcclusion {
@@ -192,7 +225,9 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     }
 
     func windowWillClose(_ notification: Notification) {
+        slideshowController.stop()
         stopAnimation()
+        onClose(self)
     }
 
     func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
@@ -210,11 +245,32 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             #selector(nextAnimationFrame(_:)), #selector(decreaseAnimationSpeed(_:)),
             #selector(increaseAnimationSpeed(_:)),
         ]
+        let slideshowActions: Set<Selector> = [
+            #selector(toggleSlideshow(_:)), #selector(startReverseSlideshow(_:)),
+            #selector(toggleSlideshowPause(_:)),
+        ]
         guard let action = item.action else { return true }
         if action == #selector(toggleAnimationPlayback(_:)), let menuItem = item as? NSMenuItem {
             menuItem.title = animationIsPlaying ? "Pause Animation" : "Play Animation"
         }
         if animationActions.contains(action) { return animationWorker != nil }
+        if action == #selector(toggleSlideshow(_:)), let menuItem = item as? NSMenuItem {
+            menuItem.title = slideshowController.state == .stopped ? "Start Slideshow" : "Stop Slideshow"
+            menuItem.state = slideshowController.activeDirection == .next ? .on : .off
+        }
+        if action == #selector(startReverseSlideshow(_:)), let menuItem = item as? NSMenuItem {
+            menuItem.state = slideshowController.activeDirection == .previous ? .on : .off
+        }
+        if action == #selector(toggleSlideshowPause(_:)), let menuItem = item as? NSMenuItem {
+            menuItem.title = slideshowController.state == .paused ? "Resume Slideshow" : "Pause Slideshow"
+            menuItem.state = slideshowController.state == .paused ? .on : .off
+        }
+        if slideshowActions.contains(action) {
+            if action == #selector(toggleSlideshowPause(_:)) {
+                return slideshowController.state != .stopped
+            }
+            return (session.catalog?.entries.count ?? 0) > 1 && session.currentAsset != nil
+        }
         return imageActions.contains(action) ? session.currentAsset != nil : true
     }
 
@@ -286,6 +342,65 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     func setBackgroundAsset(_ asset: RasterAsset?) {
         canvas.backgroundAsset = asset
     }
+
+    func suspendSlideshowForModalPanel() -> Bool {
+        guard slideshowController.state == .running else { return false }
+        slideshowController.pause()
+        return true
+    }
+
+    func restoreSlideshowAfterModalPanel(ifNeeded shouldRestore: Bool) {
+        guard shouldRestore, slideshowController.state == .paused else { return }
+        slideshowController.resume()
+    }
+
+    func stopSlideshow() {
+        slideshowController.stop()
+    }
+
+    private func navigateManually(_ direction: CatalogDirection) {
+        slideshowController.manualNavigationOccurred()
+        session.navigate(direction)
+    }
+
+    private func startSlideshow(direction: CatalogDirection) {
+        guard (session.catalog?.entries.count ?? 0) > 1, session.currentAsset != nil else { return }
+        try? slideshowController.start(direction: direction, interval: preferences.slideshowInterval)
+    }
+
+    func bindViewerMenuTargets(in menu: NSMenu?) {
+        guard let menu else { return }
+        for item in menu.items {
+            if let action = item.action, Self.viewerMenuActions.contains(action) {
+                item.target = self
+            }
+            bindViewerMenuTargets(in: item.submenu)
+        }
+    }
+
+    func releaseViewerMenuTargets(in menu: NSMenu?) {
+        guard let menu else { return }
+        for item in menu.items {
+            if item.target === self {
+                item.target = nil
+            }
+            releaseViewerMenuTargets(in: item.submenu)
+        }
+    }
+
+    private static let viewerMenuActions: Set<Selector> = [
+        #selector(previousImage(_:)), #selector(nextImage(_:)), #selector(firstImage(_:)),
+        #selector(lastImage(_:)), #selector(zoomIn(_:)), #selector(zoomOut(_:)),
+        #selector(fitToWindow(_:)), #selector(fillWindow(_:)), #selector(actualSize(_:)),
+        #selector(rotateLeft(_:)), #selector(rotateRight(_:)), #selector(flipHorizontal(_:)),
+        #selector(flipVertical(_:)), #selector(toggleViewerFullScreen(_:)),
+        #selector(reloadImage(_:)), #selector(revealImageInFinder(_:)),
+        #selector(openImageWith(_:)), #selector(showImageInformation(_:)),
+        #selector(toggleAnimationPlayback(_:)), #selector(previousAnimationFrame(_:)),
+        #selector(nextAnimationFrame(_:)), #selector(decreaseAnimationSpeed(_:)),
+        #selector(increaseAnimationSpeed(_:)), #selector(toggleSlideshow(_:)),
+        #selector(startReverseSlideshow(_:)), #selector(toggleSlideshowPause(_:)),
+    ]
 
     private func present(animation: AnimationAsset) {
         let worker = AnimationPlaybackWorker(

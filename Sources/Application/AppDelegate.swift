@@ -7,7 +7,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let coordinator = AppCoordinator()
         self.coordinator = coordinator
-        if let path = UserDefaults.standard.string(forKey: "LightViewUITestShowInfoPath") {
+        if UserDefaults.standard.bool(forKey: "LightViewUITestEmptyWindow") {
+            coordinator.openEmptyWindow()
+        } else if let path = UserDefaults.standard.string(forKey: "LightViewUITestShowInfoPath") {
             coordinator.showInformationForTesting(path: path)
         } else if let path = UserDefaults.standard.string(forKey: "LightViewUITestOpenPath") {
             coordinator.open(URL(fileURLWithPath: path))

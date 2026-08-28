@@ -51,14 +51,16 @@ public final class ViewingSession: @unchecked Sendable {
         }
     }
 
-    public func navigate(_ direction: CatalogDirection) {
+    @discardableResult
+    public func navigate(_ direction: CatalogDirection) -> Bool {
         guard let catalog, let currentURL,
               let entry = catalog.neighbor(
                   from: currentURL,
                   direction: direction,
                   wraps: navigationWraps
-              ) else { return }
+              ) else { return false }
         open(entry.url)
+        return true
     }
 
     public func reload(targetPixelSize: CGSize? = nil) {

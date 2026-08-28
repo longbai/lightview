@@ -9,7 +9,7 @@ public enum CatalogSort: String, Sendable, CaseIterable {
     case sizeSmallest
 }
 
-public enum CatalogDirection: Sendable {
+public enum CatalogDirection: Sendable, Equatable {
     case previous
     case next
 }

@@ -24,7 +24,8 @@ final class AppCoordinator: NSObject {
             preferences: preferences,
             systemIntegration: systemIntegration,
             onOpenPanelRequest: { [weak self] in self?.showOpenPanel(nil) },
-            onShowInformation: { [weak self] model in self?.showInformation(model) }
+            onShowInformation: { [weak self] model in self?.showInformation(model) },
+            onClose: { [weak self] controller in self?.viewerWindowDidClose(controller) }
         )
         windowControllers.append(controller)
         return controller
@@ -43,12 +44,18 @@ final class AppCoordinator: NSObject {
     @objc func newWindow(_ sender: Any?) { openEmptyWindow() }
 
     @objc func showOpenPanel(_ sender: Any?) {
+        let presentingController = windowControllers.first(where: { $0.window?.isKeyWindow == true })
+        let restoresSlideshow = presentingController?.suspendSlideshowForModalPanel() == true
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = "Open"
-        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard panel.runModal() == .OK, let url = panel.url else {
+            presentingController?.restoreSlideshowAfterModalPanel(ifNeeded: restoresSlideshow)
+            return
+        }
+        presentingController?.stopSlideshow()
         open(url)
     }
 
@@ -138,6 +145,13 @@ final class AppCoordinator: NSObject {
         add(.increaseAnimationSpeed, to: animationMenu, action: #selector(ViewerWindowController.increaseAnimationSpeed(_:)))
         append(animationMenu, titled: "Animation", to: main)
 
+        let slideshowMenu = NSMenu(title: "Slideshow")
+        add(.toggleSlideshow, to: slideshowMenu, action: #selector(ViewerWindowController.toggleSlideshow(_:)))
+        add(.startReverseSlideshow, to: slideshowMenu, action: #selector(ViewerWindowController.startReverseSlideshow(_:)))
+        slideshowMenu.addItem(.separator())
+        add(.toggleSlideshowPause, to: slideshowMenu, action: #selector(ViewerWindowController.toggleSlideshowPause(_:)))
+        append(slideshowMenu, titled: "Slideshow", to: main)
+
         let windowMenu = NSMenu(title: "Window")
         windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         append(windowMenu, titled: "Window", to: main)
@@ -175,6 +189,14 @@ final class AppCoordinator: NSObject {
         }
         informationWindowController?.showWindow(nil)
         informationWindowController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    private func viewerWindowDidClose(_ controller: ViewerWindowController) {
+        controller.releaseViewerMenuTargets(in: NSApplication.shared.mainMenu)
+        windowControllers.removeAll { $0 === controller }
+        let replacement = windowControllers.first(where: { $0.window?.isKeyWindow == true })
+            ?? windowControllers.last(where: { $0.window?.isVisible == true })
+        replacement?.bindViewerMenuTargets(in: NSApplication.shared.mainMenu)
     }
 
     private func refreshOpenRecentMenu() {

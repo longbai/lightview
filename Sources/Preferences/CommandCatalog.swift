@@ -24,6 +24,8 @@ public enum CommandIdentifier: String, CaseIterable, Hashable, Sendable {
     case decreaseAnimationSpeed
     case increaseAnimationSpeed
     case toggleSlideshow
+    case startReverseSlideshow
+    case toggleSlideshowPause
     case information
     case openWith
     case reload
@@ -91,6 +93,8 @@ public enum CommandCatalog {
         .init(identifier: .decreaseAnimationSpeed, title: "Decrease Animation Speed", keyEquivalent: "[", modifiers: .option, shortcutDescription: "⌥["),
         .init(identifier: .increaseAnimationSpeed, title: "Increase Animation Speed", keyEquivalent: "]", modifiers: .option, shortcutDescription: "⌥]"),
         .init(identifier: .toggleSlideshow, title: "Start or Stop Slideshow", keyEquivalent: "\r", shortcutDescription: "Return"),
+        .init(identifier: .startReverseSlideshow, title: "Start Reverse Slideshow", keyEquivalent: "\r", modifiers: .shift, shortcutDescription: "⇧Return"),
+        .init(identifier: .toggleSlideshowPause, title: "Pause or Resume Slideshow", keyEquivalent: "", shortcutDescription: ""),
         .init(identifier: .information, title: "File Information", keyEquivalent: "i", modifiers: .command, shortcutDescription: "⌘I"),
         .init(identifier: .openWith, title: "Open With…", keyEquivalent: "", shortcutDescription: ""),
         .init(identifier: .reload, title: "Reload", keyEquivalent: "r", modifiers: .command, shortcutDescription: "⌘R"),
