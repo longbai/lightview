@@ -93,7 +93,7 @@ public struct FolderCatalog: Sendable {
     }
 
     private static let supportedExtensions: Set<String> = [
-        "arw", "avif", "bmp", "cr2", "cr3", "cur", "dng", "erf", "gif", "heic", "heif",
+        "apng", "arw", "avif", "bmp", "cr2", "cr3", "cur", "dng", "erf", "gif", "heic", "heif",
         "hif", "ico", "j2k", "jpe", "jpeg", "jp2", "jpf", "jpg", "jpx", "mos", "mrw",
         "nef", "nrw", "orf", "pef", "png", "raf", "raw", "rw2", "srw", "svg", "tif",
         "tiff", "webp", "x3f",

@@ -4,7 +4,7 @@ import Foundation
 public enum ViewingState: Sendable {
     case empty
     case loading(url: URL, generation: UInt64)
-    case presenting(url: URL, asset: RasterAsset, generation: UInt64)
+    case presenting(url: URL, asset: DisplayAsset, generation: UInt64)
     case failed(url: URL, error: ImageLoadError, generation: UInt64)
 }
 
@@ -18,7 +18,7 @@ public final class ViewingSession: @unchecked Sendable {
     public private(set) var state: ViewingState = .empty
     public private(set) var generation: UInt64 = 0
     public private(set) var currentURL: URL?
-    public private(set) var currentAsset: RasterAsset?
+    public private(set) var currentAsset: DisplayAsset?
 
     private let loader: any ImageLoading
     private var activeCancellation: DecodeCancellation?
@@ -76,7 +76,7 @@ public final class ViewingSession: @unchecked Sendable {
     }
 
     private func receive(
-        _ result: Result<RasterAsset, ImageLoadError>,
+        _ result: Result<DisplayAsset, ImageLoadError>,
         for request: DecodeRequest
     ) {
         guard request.generation == generation, request.url == currentURL else { return }

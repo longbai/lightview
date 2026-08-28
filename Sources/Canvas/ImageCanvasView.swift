@@ -4,7 +4,11 @@ import LightViewCore
 @MainActor
 final class ImageCanvasView: NSView {
     var asset: RasterAsset? {
-        didSet { needsDisplay = true }
+        didSet {
+            animationImage = nil
+            animationPixelSize = nil
+            needsDisplay = true
+        }
     }
     var viewportState = ViewportState() {
         didSet { needsDisplay = true }
@@ -18,6 +22,8 @@ final class ImageCanvasView: NSView {
 
     private var dragOrigin: CGPoint?
     private var translationAtDragStart = CGPoint.zero
+    private var animationImage: CGImage?
+    private var animationPixelSize: CGSize?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -41,8 +47,9 @@ final class ImageCanvasView: NSView {
         viewerBackgroundColor.setFill()
         dirtyRect.fill()
         drawBackgroundImageIfNeeded()
-        guard let asset,
-              let scale = presentationScale(for: asset.originalPixelSize),
+        guard let displayedImage,
+              let displayedPixelSize,
+              let scale = presentationScale(for: displayedPixelSize),
               let context = NSGraphicsContext.current?.cgContext else { return }
 
         context.saveGState()
@@ -55,10 +62,10 @@ final class ImageCanvasView: NSView {
             x: viewportState.isFlippedHorizontally ? -1 : 1,
             y: viewportState.isFlippedVertically ? -1 : 1
         )
-        let width = asset.originalPixelSize.width * scale
-        let height = asset.originalPixelSize.height * scale
+        let width = displayedPixelSize.width * scale
+        let height = displayedPixelSize.height * scale
         context.interpolationQuality = scale >= 1 ? .none : .high
-        context.draw(asset.image, in: CGRect(x: -width / 2, y: -height / 2, width: width, height: height))
+        context.draw(displayedImage, in: CGRect(x: -width / 2, y: -height / 2, width: width, height: height))
         context.restoreGState()
     }
 
@@ -88,8 +95,8 @@ final class ImageCanvasView: NSView {
     }
 
     override func magnify(with event: NSEvent) {
-        guard let asset else { return }
-        let currentScale = presentationScale(for: asset.originalPixelSize) ?? viewportState.magnification
+        guard let displayedPixelSize else { return }
+        let currentScale = presentationScale(for: displayedPixelSize) ?? viewportState.magnification
         let anchor = convert(event.locationInWindow, from: nil)
         let result = ViewportGeometry.anchoredZoom(
             from: currentScale,
@@ -104,13 +111,13 @@ final class ImageCanvasView: NSView {
     }
 
     override func scrollWheel(with event: NSEvent) {
-        guard let asset else { return }
+        guard let displayedPixelSize else { return }
         viewportState.translation.x += event.scrollingDeltaX
         viewportState.translation.y -= event.scrollingDeltaY
         viewportState.translation = ViewportGeometry.clampedTranslation(
-            imageSize: asset.originalPixelSize,
+            imageSize: displayedPixelSize,
             viewportSize: bounds.size,
-            scale: presentationScale(for: asset.originalPixelSize) ?? viewportState.magnification,
+            scale: presentationScale(for: displayedPixelSize) ?? viewportState.magnification,
             rotationDegrees: viewportState.rotationDegrees,
             proposed: viewportState.translation
         ) ?? .zero
@@ -123,16 +130,16 @@ final class ImageCanvasView: NSView {
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let asset, let dragOrigin else { return }
+        guard let displayedPixelSize, let dragOrigin else { return }
         let point = convert(event.locationInWindow, from: nil)
         let proposed = CGPoint(
             x: translationAtDragStart.x + point.x - dragOrigin.x,
             y: translationAtDragStart.y + point.y - dragOrigin.y
         )
         viewportState.translation = ViewportGeometry.clampedTranslation(
-            imageSize: asset.originalPixelSize,
+            imageSize: displayedPixelSize,
             viewportSize: bounds.size,
-            scale: presentationScale(for: asset.originalPixelSize) ?? viewportState.magnification,
+            scale: presentationScale(for: displayedPixelSize) ?? viewportState.magnification,
             rotationDegrees: viewportState.rotationDegrees,
             proposed: proposed
         ) ?? .zero
@@ -148,8 +155,8 @@ final class ImageCanvasView: NSView {
     }
 
     func zoom(by factor: CGFloat) {
-        guard let asset else { return }
-        let current = presentationScale(for: asset.originalPixelSize) ?? viewportState.magnification
+        guard let displayedPixelSize else { return }
+        let current = presentationScale(for: displayedPixelSize) ?? viewportState.magnification
         viewportState.mode = .manual
         viewportState.magnification = ViewportGeometry.clampedMagnification(current * factor)
     }
@@ -158,6 +165,23 @@ final class ImageCanvasView: NSView {
         viewportState.rotationDegrees = ViewportGeometry.normalizedRotation(viewportState.rotationDegrees + degrees)
         viewportState.translation = .zero
     }
+
+    func setAnimationFrame(_ frame: AnimationFrame, canvasPixelSize: CGSize) {
+        asset = nil
+        animationImage = frame.image
+        animationPixelSize = canvasPixelSize
+        needsDisplay = true
+    }
+
+    func clearImage() {
+        asset = nil
+        animationImage = nil
+        animationPixelSize = nil
+        needsDisplay = true
+    }
+
+    private var displayedImage: CGImage? { animationImage ?? asset?.image }
+    private var displayedPixelSize: CGSize? { animationPixelSize ?? asset?.originalPixelSize }
 
     private func presentationScale(for imageSize: CGSize) -> CGFloat? {
         switch viewportState.mode {

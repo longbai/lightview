@@ -128,6 +128,16 @@ final class AppCoordinator: NSObject {
         add(.toggleFullScreen, to: viewMenu, action: #selector(ViewerWindowController.toggleViewerFullScreen(_:)))
         append(viewMenu, titled: "View", to: main)
 
+        let animationMenu = NSMenu(title: "Animation")
+        add(.togglePlayback, to: animationMenu, action: #selector(ViewerWindowController.toggleAnimationPlayback(_:)))
+        animationMenu.addItem(.separator())
+        add(.previousAnimationFrame, to: animationMenu, action: #selector(ViewerWindowController.previousAnimationFrame(_:)))
+        add(.nextAnimationFrame, to: animationMenu, action: #selector(ViewerWindowController.nextAnimationFrame(_:)))
+        animationMenu.addItem(.separator())
+        add(.decreaseAnimationSpeed, to: animationMenu, action: #selector(ViewerWindowController.decreaseAnimationSpeed(_:)))
+        add(.increaseAnimationSpeed, to: animationMenu, action: #selector(ViewerWindowController.increaseAnimationSpeed(_:)))
+        append(animationMenu, titled: "Animation", to: main)
+
         let windowMenu = NSMenu(title: "Window")
         windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         append(windowMenu, titled: "Window", to: main)
@@ -214,7 +224,7 @@ final class AppCoordinator: NSObject {
             generation: 0
         )
         backgroundCancellation = pipeline.load(request) { [weak self] result in
-            guard case .success(let asset) = result else { return }
+            guard case .success(.raster(let asset)) = result else { return }
             DispatchQueue.main.async { [weak self] in
                 self?.windowControllers.forEach { $0.setBackgroundAsset(asset) }
             }

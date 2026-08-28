@@ -13,6 +13,12 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private let systemIntegration: SystemIntegration
     private let onShowInformation: (ImageInformationModel) -> Void
     private var showsInformationAfterNextPresentation = false
+    private var animationWorker: AnimationPlaybackWorker?
+    private var animationCanvasPixelSize: CGSize?
+    private var animationTimer: Timer?
+    private var animationIsPlaying = false
+    private var animationSpeed = 1.0
+    private var resumesAnimationAfterOcclusion = false
 
     init(
         session: ViewingSession,
@@ -75,7 +81,8 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     }
 
     func showWelcome() {
-        canvas.asset = nil
+        stopAnimation()
+        canvas.clearImage()
         embed(welcome.view)
         window?.title = "LightView"
     }
@@ -99,6 +106,23 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     @objc func flipVertical(_ sender: Any?) { canvas.viewportState.isFlippedVertically.toggle() }
     @objc func toggleViewerFullScreen(_ sender: Any?) { window?.toggleFullScreen(sender) }
     @objc func reloadImage(_ sender: Any?) { session.reload(targetPixelSize: decodeTargetSize) }
+    @objc func toggleAnimationPlayback(_ sender: Any?) {
+        performAnimationCommand(.toggle)
+    }
+    @objc func previousAnimationFrame(_ sender: Any?) {
+        stopAnimationTimer()
+        performAnimationCommand(.stepBackward)
+    }
+    @objc func nextAnimationFrame(_ sender: Any?) {
+        stopAnimationTimer()
+        performAnimationCommand(.stepForward)
+    }
+    @objc func decreaseAnimationSpeed(_ sender: Any?) {
+        setAnimationSpeed(animationSpeed / 2)
+    }
+    @objc func increaseAnimationSpeed(_ sender: Any?) {
+        setAnimationSpeed(animationSpeed * 2)
+    }
     @objc func revealImageInFinder(_ sender: Any?) {
         guard let url = session.currentURL else { return }
         systemIntegration.revealInFinder(url)
@@ -150,6 +174,27 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         refreshForDisplayChange()
     }
 
+    func windowDidChangeOcclusionState(_ notification: Notification) {
+        if window?.occlusionState.contains(.visible) == true {
+            if resumesAnimationAfterOcclusion {
+                resumesAnimationAfterOcclusion = false
+                performAnimationCommand(.play)
+            } else {
+                startAnimationTimerIfVisible()
+            }
+        } else {
+            if preferences.animationEnergySaving, animationIsPlaying {
+                resumesAnimationAfterOcclusion = true
+                performAnimationCommand(.pause)
+            }
+            stopAnimationTimer()
+        }
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        stopAnimation()
+    }
+
     func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
         let imageActions: Set<Selector> = [
             #selector(previousImage(_:)), #selector(nextImage(_:)), #selector(firstImage(_:)),
@@ -160,7 +205,16 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             #selector(revealImageInFinder(_:)), #selector(openImageWith(_:)),
             #selector(showImageInformation(_:)),
         ]
+        let animationActions: Set<Selector> = [
+            #selector(toggleAnimationPlayback(_:)), #selector(previousAnimationFrame(_:)),
+            #selector(nextAnimationFrame(_:)), #selector(decreaseAnimationSpeed(_:)),
+            #selector(increaseAnimationSpeed(_:)),
+        ]
         guard let action = item.action else { return true }
+        if action == #selector(toggleAnimationPlayback(_:)), let menuItem = item as? NSMenuItem {
+            menuItem.title = animationIsPlaying ? "Pause Animation" : "Play Animation"
+        }
+        if animationActions.contains(action) { return animationWorker != nil }
         return imageActions.contains(action) ? session.currentAsset != nil : true
     }
 
@@ -185,9 +239,18 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         case .empty:
             showWelcome()
         case .loading(let url, _):
+            stopAnimation()
             window?.title = "Loading \(url.lastPathComponent)…"
         case .presenting(let url, let asset, _):
-            canvas.asset = asset
+            stopAnimation()
+            switch asset {
+            case .raster(let raster):
+                canvas.asset = raster
+            case .animation(let animation):
+                present(animation: animation)
+            case .vector:
+                canvas.clearImage()
+            }
             embed(canvas)
             window?.title = title(for: url)
             window?.makeFirstResponder(canvas)
@@ -222,6 +285,90 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
 
     func setBackgroundAsset(_ asset: RasterAsset?) {
         canvas.backgroundAsset = asset
+    }
+
+    private func present(animation: AnimationAsset) {
+        let worker = AnimationPlaybackWorker(
+            provider: animation.provider,
+            cacheByteLimit: 256 * 1_024 * 1_024
+        )
+        animationWorker = worker
+        animationCanvasPixelSize = animation.canvasPixelSize
+        animationIsPlaying = true
+        animationSpeed = 1
+        worker.perform(.play, at: ProcessInfo.processInfo.systemUptime) { [weak self, weak worker] result in
+            Task { @MainActor in self?.handleAnimationResult(result, from: worker) }
+        }
+    }
+
+    private func renderAnimationFrame(at timestamp: TimeInterval = ProcessInfo.processInfo.systemUptime) {
+        guard let worker = animationWorker else { return }
+        worker.advance(to: timestamp) { [weak self, weak worker] result in
+            Task { @MainActor in self?.handleAnimationResult(result, from: worker) }
+        }
+    }
+
+    private func setAnimationSpeed(_ speed: Double) {
+        performAnimationCommand(.setSpeed(speed))
+    }
+
+    private func performAnimationCommand(_ command: AnimationPlaybackCommand) {
+        guard let worker = animationWorker else { return }
+        worker.perform(command, at: ProcessInfo.processInfo.systemUptime) { [weak self, weak worker] result in
+            Task { @MainActor in self?.handleAnimationResult(result, from: worker) }
+        }
+    }
+
+    private func handleAnimationResult(
+        _ result: Result<AnimationPlaybackSnapshot, Error>,
+        from worker: AnimationPlaybackWorker?
+    ) {
+        guard let worker, worker === animationWorker, let animationCanvasPixelSize else { return }
+        switch result {
+        case .success(let snapshot):
+            animationIsPlaying = snapshot.isPlaying
+            animationSpeed = snapshot.speed
+            canvas.setAnimationFrame(snapshot.frame, canvasPixelSize: animationCanvasPixelSize)
+            if snapshot.isComplete || !snapshot.isPlaying {
+                stopAnimationTimer()
+            } else {
+                startAnimationTimerIfVisible()
+            }
+        case .failure(let error):
+            stopAnimation()
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "Couldn’t Play Animation"
+            alert.informativeText = error.localizedDescription
+            if let window { alert.beginSheetModal(for: window) }
+        }
+    }
+
+    private func startAnimationTimerIfVisible() {
+        guard animationTimer == nil,
+              animationIsPlaying,
+              animationWorker != nil,
+              window?.occlusionState.contains(.visible) == true else { return }
+        let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.renderAnimationFrame() }
+        }
+        animationTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopAnimationTimer() {
+        animationTimer?.invalidate()
+        animationTimer = nil
+    }
+
+    private func stopAnimation() {
+        stopAnimationTimer()
+        animationWorker?.cancel()
+        animationWorker = nil
+        animationCanvasPixelSize = nil
+        animationIsPlaying = false
+        animationSpeed = 1
+        resumesAnimationAfterOcclusion = false
     }
 
     private func embed(_ view: NSView) {

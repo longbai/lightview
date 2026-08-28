@@ -19,6 +19,10 @@ public enum CommandIdentifier: String, CaseIterable, Hashable, Sendable {
     case flipVertical
     case toggleFullScreen
     case togglePlayback
+    case previousAnimationFrame
+    case nextAnimationFrame
+    case decreaseAnimationSpeed
+    case increaseAnimationSpeed
     case toggleSlideshow
     case information
     case openWith
@@ -82,6 +86,10 @@ public enum CommandCatalog {
         .init(identifier: .flipVertical, title: "Flip Vertical", keyEquivalent: "v", shortcutDescription: "V"),
         .init(identifier: .toggleFullScreen, title: "Enter Full Screen", keyEquivalent: "f", modifiers: [.control, .command], shortcutDescription: "⌃⌘F"),
         .init(identifier: .togglePlayback, title: "Play or Pause Animation", keyEquivalent: " ", shortcutDescription: "Space"),
+        .init(identifier: .previousAnimationFrame, title: "Previous Animation Frame", keyEquivalent: "[", shortcutDescription: "["),
+        .init(identifier: .nextAnimationFrame, title: "Next Animation Frame", keyEquivalent: "]", shortcutDescription: "]"),
+        .init(identifier: .decreaseAnimationSpeed, title: "Decrease Animation Speed", keyEquivalent: "[", modifiers: .option, shortcutDescription: "⌥["),
+        .init(identifier: .increaseAnimationSpeed, title: "Increase Animation Speed", keyEquivalent: "]", modifiers: .option, shortcutDescription: "⌥]"),
         .init(identifier: .toggleSlideshow, title: "Start or Stop Slideshow", keyEquivalent: "\r", shortcutDescription: "Return"),
         .init(identifier: .information, title: "File Information", keyEquivalent: "i", modifiers: .command, shortcutDescription: "⌘I"),
         .init(identifier: .openWith, title: "Open With…", keyEquivalent: "", shortcutDescription: ""),

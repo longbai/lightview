@@ -112,6 +112,27 @@ final class AnimationControllerTests: XCTestCase {
         XCTAssertEqual(asset.descriptor, provider.descriptor)
     }
 
+    func testPlaybackWorkerDecodesOffMainThreadAndPublishesOnCallbackQueue() {
+        let probe = ThreadProbe()
+        let provider = TestFrameProvider(
+            descriptor: descriptor(),
+            frameByteCost: 1,
+            frameObserver: { probe.record(Thread.isMainThread) }
+        )
+        let worker = AnimationPlaybackWorker(provider: provider, cacheByteLimit: 3)
+        let completed = expectation(description: "background frame published")
+
+        worker.perform(.play, at: 0) { result in
+            XCTAssertTrue(Thread.isMainThread)
+            if case .failure(let error) = result { XCTFail("Unexpected error: \(error)") }
+            completed.fulfill()
+        }
+
+        wait(for: [completed], timeout: 2)
+        XCTAssertFalse(probe.observations.isEmpty)
+        XCTAssertTrue(probe.observations.allSatisfy { !$0 })
+    }
+
     private func descriptor(frameCount: Int = 3) -> AnimationDescriptor {
         AnimationDescriptor(
             canvasPixelSize: CGSize(width: 1, height: 1),
@@ -125,16 +146,19 @@ private final class TestFrameProvider: AnimationFrameProvider, @unchecked Sendab
     let descriptor: AnimationDescriptor
     private let frameByteCost: Int
     private let returnedIndexOffset: Int
+    private let frameObserver: (@Sendable () -> Void)?
     private let image: CGImage
 
     init(
         descriptor: AnimationDescriptor,
         frameByteCost: Int,
-        returnedIndexOffset: Int = 0
+        returnedIndexOffset: Int = 0,
+        frameObserver: (@Sendable () -> Void)? = nil
     ) {
         self.descriptor = descriptor
         self.frameByteCost = frameByteCost
         self.returnedIndexOffset = returnedIndexOffset
+        self.frameObserver = frameObserver
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
         let context = CGContext(
             data: nil,
@@ -149,10 +173,22 @@ private final class TestFrameProvider: AnimationFrameProvider, @unchecked Sendab
     }
 
     func frame(at index: Int) throws -> AnimationFrame {
-        AnimationFrame(
+        frameObserver?()
+        return AnimationFrame(
             index: index + returnedIndexOffset,
             image: image,
             decodedByteCost: frameByteCost
         )
+    }
+}
+
+private final class ThreadProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [Bool] = []
+
+    var observations: [Bool] { lock.withLock { values } }
+
+    func record(_ isMainThread: Bool) {
+        lock.withLock { values.append(isMainThread) }
     }
 }

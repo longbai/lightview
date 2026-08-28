@@ -19,10 +19,16 @@ public final class AnimationController {
     private var cache: [Int: AnimationFrame] = [:]
     private var priorFrameIndex: Int?
     private let cacheMutationObserver: ((Int, Int) -> Void)?
+    private let cancellation: DecodeCancellation
 
-    public init(provider: any AnimationFrameProvider, cacheByteLimit: Int) {
+    public init(
+        provider: any AnimationFrameProvider,
+        cacheByteLimit: Int,
+        cancellation: DecodeCancellation = DecodeCancellation()
+    ) {
         self.provider = provider
         self.cacheByteLimit = max(0, cacheByteLimit)
+        self.cancellation = cancellation
         cacheMutationObserver = nil
         clock = FrameClock(descriptor: provider.descriptor)
     }
@@ -30,10 +36,12 @@ public final class AnimationController {
     init(
         provider: any AnimationFrameProvider,
         cacheByteLimit: Int,
+        cancellation: DecodeCancellation = DecodeCancellation(),
         cacheMutationObserver: @escaping (Int, Int) -> Void
     ) {
         self.provider = provider
         self.cacheByteLimit = max(0, cacheByteLimit)
+        self.cancellation = cancellation
         self.cacheMutationObserver = cacheMutationObserver
         clock = FrameClock(descriptor: provider.descriptor)
     }
@@ -90,7 +98,8 @@ public final class AnimationController {
 
     private func cachedOrLoad(index: Int, preserving protectedIndices: Set<Int>) throws -> AnimationFrame {
         if let cached = cache[index] { return cached }
-        let frame = try provider.frame(at: index)
+        try cancellation.throwIfCancelled()
+        let frame = try provider.frame(at: index, cancellation: cancellation)
         guard frame.index == index else {
             throw AnimationPlaybackError.frameIndexMismatch(requested: index, returned: frame.index)
         }

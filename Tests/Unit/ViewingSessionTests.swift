@@ -77,14 +77,14 @@ final class ViewingSessionTests: XCTestCase {
 private final class ControlledImageLoader: ImageLoading, @unchecked Sendable {
     private let lock = NSLock()
     private var requests: [DecodeRequest] = []
-    private var completions: [UInt64: @Sendable (Result<RasterAsset, ImageLoadError>) -> Void] = [:]
+    private var completions: [UInt64: @Sendable (Result<DisplayAsset, ImageLoadError>) -> Void] = [:]
 
     var requestCount: Int { lock.withLock { requests.count } }
     var lastRequest: DecodeRequest? { lock.withLock { requests.last } }
 
     func load(
         _ request: DecodeRequest,
-        completion: @escaping @Sendable (Result<RasterAsset, ImageLoadError>) -> Void
+        completion: @escaping @Sendable (Result<DisplayAsset, ImageLoadError>) -> Void
     ) -> DecodeCancellation {
         lock.withLock {
             requests.append(request)
@@ -93,13 +93,13 @@ private final class ControlledImageLoader: ImageLoading, @unchecked Sendable {
         return DecodeCancellation()
     }
 
-    func complete(generation: UInt64, with result: Result<RasterAsset, ImageLoadError>) {
+    func complete(generation: UInt64, with result: Result<DisplayAsset, ImageLoadError>) {
         let completion = lock.withLock { completions.removeValue(forKey: generation) }
         completion?(result)
     }
 }
 
-private func makeSessionAsset(cost: Int) throws -> RasterAsset {
+private func makeSessionAsset(cost: Int) throws -> DisplayAsset {
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     guard let context = CGContext(
         data: nil,
@@ -113,12 +113,12 @@ private func makeSessionAsset(cost: Int) throws -> RasterAsset {
         throw ImageLoadError.decodeFailed("Unable to make session test image")
     }
     let size = CGSize(width: 1, height: 1)
-    return RasterAsset(
+    return .raster(RasterAsset(
         image: image,
         originalPixelSize: size,
         decodedPixelSize: size,
         orientation: .up,
         metadata: ImageMetadata(pixelSize: size),
         decodedByteCost: cost
-    )
+    ))
 }

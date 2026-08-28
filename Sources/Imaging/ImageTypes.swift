@@ -141,15 +141,31 @@ public struct AnimationFrame: @unchecked Sendable {
 public protocol AnimationFrameProvider: Sendable {
     var descriptor: AnimationDescriptor { get }
     func frame(at index: Int) throws -> AnimationFrame
+    func frame(at index: Int, cancellation: DecodeCancellation) throws -> AnimationFrame
+}
+
+public extension AnimationFrameProvider {
+    func frame(at index: Int, cancellation: DecodeCancellation) throws -> AnimationFrame {
+        try cancellation.throwIfCancelled()
+        return try frame(at: index)
+    }
 }
 
 public struct AnimationAsset: Sendable {
     public let descriptor: AnimationDescriptor
     public let provider: any AnimationFrameProvider
+    public let format: ImageFormat
+    public let metadata: ImageMetadata
 
-    public init(provider: any AnimationFrameProvider) {
+    public init(
+        provider: any AnimationFrameProvider,
+        format: ImageFormat = .unknown,
+        metadata: ImageMetadata? = nil
+    ) {
         descriptor = provider.descriptor
         self.provider = provider
+        self.format = format
+        self.metadata = metadata ?? ImageMetadata(pixelSize: provider.descriptor.canvasPixelSize)
     }
 
     public var canvasPixelSize: CGSize { descriptor.canvasPixelSize }
@@ -172,6 +188,41 @@ public enum DisplayAsset: Sendable {
     case raster(RasterAsset)
     case animation(AnimationAsset)
     case vector(VectorAsset)
+}
+
+public extension DisplayAsset {
+    var format: ImageFormat {
+        switch self {
+        case .raster(let asset): asset.format
+        case .animation(let asset): asset.format
+        case .vector: .svg
+        }
+    }
+
+    var frameCount: Int {
+        switch self {
+        case .raster(let asset): asset.frameCount
+        case .animation(let asset): asset.frameCount
+        case .vector: 1
+        }
+    }
+
+    var metadata: ImageMetadata {
+        switch self {
+        case .raster(let asset): asset.metadata
+        case .animation(let asset): asset.metadata
+        case .vector(let asset):
+            ImageMetadata(
+                pixelSize: asset.intrinsicPixelSize ?? .zero,
+                fileByteCount: Int64(asset.sourceByteCount)
+            )
+        }
+    }
+
+    var raster: RasterAsset? {
+        guard case let .raster(asset) = self else { return nil }
+        return asset
+    }
 }
 
 public enum ImageLoadError: Error, Sendable, Equatable {

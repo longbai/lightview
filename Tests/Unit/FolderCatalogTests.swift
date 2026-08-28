@@ -9,6 +9,7 @@ final class FolderCatalogTests: XCTestCase {
 
         try Data().write(to: directory.appendingPathComponent("img10.png"))
         try Data().write(to: directory.appendingPathComponent("img2.png"))
+        try Data().write(to: directory.appendingPathComponent("animated.apng"))
         try Data().write(to: directory.appendingPathComponent(".hidden.png"))
         try Data().write(to: directory.appendingPathComponent("notes.txt"))
         try FileManager.default.createDirectory(
@@ -19,7 +20,7 @@ final class FolderCatalogTests: XCTestCase {
 
         let catalog = try FolderCatalog(directoryURL: directory)
 
-        XCTAssertEqual(catalog.entries.map(\.name), ["img2.png", "img10.png"])
+        XCTAssertEqual(catalog.entries.map(\.name), ["animated.apng", "img2.png", "img10.png"])
     }
 
     func testNeighborHonorsBoundariesAndWrapping() throws {

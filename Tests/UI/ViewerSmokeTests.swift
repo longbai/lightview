@@ -30,4 +30,23 @@ final class ViewerSmokeTests: XCTestCase {
         XCTAssertTrue(app.otherElements["viewer.canvas"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.windows.firstMatch.title.contains(fixtureURL.lastPathComponent))
     }
+
+    @MainActor
+    func testLaunchArgumentOpensAnimatedImageAndEnablesPlaybackMenu() {
+        let fixtureURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/Animation/disposal.gif")
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ApplePersistenceIgnoreState", "YES",
+            "-LightViewUITestOpenPath", fixtureURL.path,
+        ]
+
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["viewer.canvas"].waitForExistence(timeout: 3))
+        app.menuBars.menuBarItems["Animation"].click()
+        XCTAssertTrue(app.menuItems["Pause Animation"].isEnabled)
+    }
 }
