@@ -1,4 +1,5 @@
 import AppKit
+import Dispatch
 import LightViewCore
 
 @MainActor
@@ -17,9 +18,18 @@ final class AppCoordinator: NSObject {
     private var informationWindowController: ImageInfoWindowController?
     private let openRecentMenu = NSMenu(title: L10n.text("menu.openRecent"))
     private var backgroundCancellation: DecodeCancellation?
+    private var memoryPressureSource: DispatchSourceMemoryPressure?
 
     override init() {
         super.init()
+        let source = DispatchSource.makeMemoryPressureSource(
+            eventMask: [.warning, .critical],
+            queue: .main
+        )
+        let pipeline = self.pipeline
+        source.setEventHandler { [weak pipeline] in pipeline?.handleMemoryPressure() }
+        source.resume()
+        memoryPressureSource = source
         buildMainMenu()
         applyPreferences()
     }
@@ -41,7 +51,13 @@ final class AppCoordinator: NSObject {
         return controller
     }
 
-    func openEmptyWindow() { makeWindowController().showWindow(nil) }
+    func openEmptyWindow() {
+        let controller = makeWindowController()
+        if !preferences.showsWelcomeGuide {
+            controller.showEmptyCanvas()
+        }
+        controller.showWindow(nil)
+    }
 
     func open(_ url: URL) {
         let controller = windowControllers.first(where: { $0.session.currentURL == nil }) ?? makeWindowController()
@@ -175,6 +191,7 @@ final class AppCoordinator: NSObject {
         add(.nextAnimationFrame, to: animationMenu, action: #selector(ViewerWindowController.nextAnimationFrame(_:)))
         animationMenu.addItem(.separator())
         add(.decreaseAnimationSpeed, to: animationMenu, action: #selector(ViewerWindowController.decreaseAnimationSpeed(_:)))
+        add(.normalAnimationSpeed, to: animationMenu, action: #selector(ViewerWindowController.normalAnimationSpeed(_:)))
         add(.increaseAnimationSpeed, to: animationMenu, action: #selector(ViewerWindowController.increaseAnimationSpeed(_:)))
         append(animationMenu, titled: "Animation", to: main)
 

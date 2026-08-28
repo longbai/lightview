@@ -22,6 +22,7 @@ public enum CommandIdentifier: String, CaseIterable, Hashable, Sendable {
     case previousAnimationFrame
     case nextAnimationFrame
     case decreaseAnimationSpeed
+    case normalAnimationSpeed
     case increaseAnimationSpeed
     case toggleSlideshow
     case startReverseSlideshow
@@ -91,6 +92,7 @@ public enum CommandCatalog {
         .init(identifier: .previousAnimationFrame, title: "Previous Animation Frame", keyEquivalent: "[", shortcutDescription: "["),
         .init(identifier: .nextAnimationFrame, title: "Next Animation Frame", keyEquivalent: "]", shortcutDescription: "]"),
         .init(identifier: .decreaseAnimationSpeed, title: "Decrease Animation Speed", keyEquivalent: "[", modifiers: .option, shortcutDescription: "⌥["),
+        .init(identifier: .normalAnimationSpeed, title: "Normal Animation Speed", keyEquivalent: "", shortcutDescription: ""),
         .init(identifier: .increaseAnimationSpeed, title: "Increase Animation Speed", keyEquivalent: "]", modifiers: .option, shortcutDescription: "⌥]"),
         .init(identifier: .toggleSlideshow, title: "Start or Stop Slideshow", keyEquivalent: "\r", shortcutDescription: "Return"),
         .init(identifier: .startReverseSlideshow, title: "Start Reverse Slideshow", keyEquivalent: "\r", modifiers: .shift, shortcutDescription: "⇧Return"),

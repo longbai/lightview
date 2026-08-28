@@ -71,6 +71,35 @@ public enum ViewportGeometry {
         return scaled
     }
 
+    public static func windowContentSize(
+        imageSize: CGSize,
+        availableSize: CGSize,
+        minimumSize: CGSize
+    ) -> CGSize? {
+        guard isValid(imageSize), isValid(availableSize), isValid(minimumSize) else { return nil }
+        let scale = min(1, availableSize.width / imageSize.width, availableSize.height / imageSize.height)
+        let fitted = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        return CGSize(
+            width: min(availableSize.width, max(minimumSize.width, fitted.width)),
+            height: min(availableSize.height, max(minimumSize.height, fitted.height))
+        )
+    }
+
+    public static func requiresHigherResolution(
+        originalPixelSize: CGSize,
+        decodedPixelSize: CGSize,
+        presentationScale: CGFloat,
+        backingScale: CGFloat
+    ) -> Bool {
+        guard isValid(originalPixelSize), isValid(decodedPixelSize),
+              presentationScale.isFinite, presentationScale > 0,
+              backingScale.isFinite, backingScale > 0 else { return false }
+        let requiredWidth = originalPixelSize.width * presentationScale * backingScale
+        let requiredHeight = originalPixelSize.height * presentationScale * backingScale
+        return requiredWidth > decodedPixelSize.width * 1.05
+            || requiredHeight > decodedPixelSize.height * 1.05
+    }
+
     public static func anchoredZoom(
         from currentScale: CGFloat,
         to requestedScale: CGFloat,

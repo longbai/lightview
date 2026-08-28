@@ -68,6 +68,38 @@ final class ImageLoadPipelineTests: XCTestCase {
         XCTAssertEqual(decoder.decodeCount, 1)
     }
 
+    func testMemoryPressureEvictsReusableRaster() throws {
+        let decoder = CountingDecoder(asset: try makeAsset(cost: 16))
+        let cache = RasterCache(byteLimit: 1_024)
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        let pipeline = ImageLoadPipeline(
+            decoder: decoder,
+            animationDecoder: nil,
+            cache: cache,
+            decodeQueue: queue
+        )
+        let request = DecodeRequest(
+            url: URL(fileURLWithPath: "/tmp/memory-pressure.png"),
+            targetPixelSize: CGSize(width: 100, height: 100),
+            requiresFullResolution: false,
+            generation: 1
+        )
+
+        let first = expectation(description: "initial decode")
+        _ = pipeline.load(request) { _ in first.fulfill() }
+        wait(for: [first], timeout: 2)
+        XCTAssertEqual(cache.totalByteCost, 16)
+
+        pipeline.handleMemoryPressure()
+        XCTAssertEqual(cache.totalByteCost, 0)
+
+        let second = expectation(description: "decode after pressure")
+        _ = pipeline.load(request) { _ in second.fulfill() }
+        wait(for: [second], timeout: 2)
+        XCTAssertEqual(decoder.decodeCount, 2)
+    }
+
     func testPreloadedAnimationIsRetainedForNextLoad() throws {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1

@@ -3,11 +3,14 @@ import LightViewCore
 
 @MainActor
 final class ImageCanvasView: NSView {
+    var onFullResolutionRequest: (() -> Void)?
     var asset: RasterAsset? {
         didSet {
+            hasRequestedFullResolution = false
             animationImage = nil
             animationPixelSize = nil
             needsDisplay = true
+            requestHigherResolutionIfNeeded()
         }
     }
     var viewportState = ViewportState() {
@@ -24,6 +27,7 @@ final class ImageCanvasView: NSView {
     private var translationAtDragStart = CGPoint.zero
     private var animationImage: CGImage?
     private var animationPixelSize: CGSize?
+    private var hasRequestedFullResolution = false
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -108,6 +112,7 @@ final class ImageCanvasView: NSView {
         viewportState.mode = .manual
         viewportState.magnification = result.scale
         viewportState.translation = result.translation
+        requestHigherResolutionIfNeeded()
     }
 
     override func scrollWheel(with event: NSEvent) {
@@ -152,6 +157,7 @@ final class ImageCanvasView: NSView {
     func setMode(_ mode: ViewportMode) {
         viewportState.mode = mode
         viewportState.translation = .zero
+        requestHigherResolutionIfNeeded()
     }
 
     func zoom(by factor: CGFloat) {
@@ -159,6 +165,7 @@ final class ImageCanvasView: NSView {
         let current = presentationScale(for: displayedPixelSize) ?? viewportState.magnification
         viewportState.mode = .manual
         viewportState.magnification = ViewportGeometry.clampedMagnification(current * factor)
+        requestHigherResolutionIfNeeded()
     }
 
     func rotate(by degrees: Int) {
@@ -194,5 +201,18 @@ final class ImageCanvasView: NSView {
         case .manual:
             viewportState.magnification
         }
+    }
+
+    private func requestHigherResolutionIfNeeded() {
+        guard !hasRequestedFullResolution, let asset,
+              let scale = presentationScale(for: asset.originalPixelSize),
+              ViewportGeometry.requiresHigherResolution(
+                  originalPixelSize: asset.originalPixelSize,
+                  decodedPixelSize: asset.decodedPixelSize,
+                  presentationScale: scale,
+                  backingScale: window?.backingScaleFactor ?? 1
+              ) else { return }
+        hasRequestedFullResolution = true
+        onFullResolutionRequest?()
     }
 }

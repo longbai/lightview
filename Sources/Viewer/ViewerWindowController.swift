@@ -56,9 +56,13 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         )
         super.init(window: window)
         window.delegate = self
-        window.center()
+        if !window.setFrameUsingName("LightView.ViewerWindow") {
+            window.center()
+        }
+        window.setFrameAutosaveName("LightView.ViewerWindow")
         window.title = "LightView"
         container.onOpenURL = { [weak self] url in self?.open(url) }
+        canvas.onFullResolutionRequest = { [weak self] in self?.loadCurrentImageAtFullResolution() }
         window.contentView = container
         welcome.onOpen = { [weak self] in self?.onOpenPanelRequest() }
         session.navigationWraps = preferences.navigationWraps
@@ -113,6 +117,15 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         window?.title = "LightView"
     }
 
+    func showEmptyCanvas() {
+        slideshowController.stop()
+        stopAnimation()
+        canvas.clearImage()
+        embed(canvas)
+        window?.title = "LightView"
+        window?.makeFirstResponder(canvas)
+    }
+
     @objc func previousImage(_ sender: Any?) { navigateManually(.previous) }
     @objc func nextImage(_ sender: Any?) { navigateManually(.next) }
     @objc func firstImage(_ sender: Any?) {
@@ -147,6 +160,9 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     }
     @objc func decreaseAnimationSpeed(_ sender: Any?) {
         setAnimationSpeed(animationSpeed / 2)
+    }
+    @objc func normalAnimationSpeed(_ sender: Any?) {
+        setAnimationSpeed(1)
     }
     @objc func increaseAnimationSpeed(_ sender: Any?) {
         setAnimationSpeed(animationSpeed * 2)
@@ -282,7 +298,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         let animationActions: Set<Selector> = [
             #selector(toggleAnimationPlayback(_:)), #selector(previousAnimationFrame(_:)),
             #selector(nextAnimationFrame(_:)), #selector(decreaseAnimationSpeed(_:)),
-            #selector(increaseAnimationSpeed(_:)),
+            #selector(normalAnimationSpeed(_:)), #selector(increaseAnimationSpeed(_:)),
         ]
         let slideshowActions: Set<Selector> = [
             #selector(toggleSlideshow(_:)), #selector(startReverseSlideshow(_:)),
@@ -345,6 +361,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             window?.title = "Loading \(url.lastPathComponent)…"
         case .presenting(let url, let asset, _):
             stopAnimation()
+            resizeWindowIfNeeded(for: asset)
             switch asset {
             case .raster(let raster):
                 canvas.asset = raster
@@ -375,6 +392,35 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private func title(for url: URL) -> String {
         guard let catalog = session.catalog, let index = catalog.index(of: url) else { return url.lastPathComponent }
         return "\(url.lastPathComponent) — \(index + 1) / \(catalog.entries.count)"
+    }
+
+    private func loadCurrentImageAtFullResolution() {
+        guard let url = session.currentURL,
+              case .raster = session.currentAsset else { return }
+        session.open(url, targetPixelSize: decodeTargetSize, requiresFullResolution: true)
+    }
+
+    private func resizeWindowIfNeeded(for asset: DisplayAsset) {
+        guard preferences.autoResizesWindow, let window, let screen = window.screen ?? NSScreen.main else { return }
+        let imageSize: CGSize
+        switch asset {
+        case .raster(let raster): imageSize = raster.originalPixelSize
+        case .animation(let animation): imageSize = animation.canvasPixelSize
+        case .vector(let vector): imageSize = vector.intrinsicPixelSize ?? .zero
+        }
+        let available = CGSize(
+            width: max(320, screen.visibleFrame.width - 80),
+            height: max(240, screen.visibleFrame.height - 100)
+        )
+        guard let contentSize = ViewportGeometry.windowContentSize(
+            imageSize: imageSize,
+            availableSize: available,
+            minimumSize: CGSize(width: 320, height: 240)
+        ) else { return }
+        let topLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
+        window.setContentSize(contentSize)
+        window.setFrameTopLeftPoint(topLeft)
+        window.setFrame(window.constrainFrameRect(window.frame, to: screen), display: true)
     }
 
     func applyPreferences() {

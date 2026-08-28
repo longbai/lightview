@@ -13,6 +13,8 @@ final class PreferencesWindowController: NSWindowController {
     private let energySavingButton = NSButton(checkboxWithTitle: "Reduce animation work when inactive", target: nil, action: nil)
     private let preloadPopup = NSPopUpButton()
     private let initialZoomPopup = NSPopUpButton()
+    private let catalogSortPopup = NSPopUpButton()
+    private let autoResizeButton = NSButton(checkboxWithTitle: "Resize window to fit newly opened images", target: nil, action: nil)
     private let zoomStepField = NSTextField()
     private let slideshowField = NSTextField()
     private let colorWell = NSColorWell()
@@ -20,7 +22,7 @@ final class PreferencesWindowController: NSWindowController {
     init(preferences: PreferencesStore) {
         self.preferences = preferences
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 470),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 530),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -41,6 +43,9 @@ final class PreferencesWindowController: NSWindowController {
         backgroundPopup.addItems(withTitles: ["Black", "Dark Gray", "White", "Custom Color", "Custom Image…"])
         preloadPopup.addItems(withTitles: ["Off", "One neighbor", "Two neighbors"])
         initialZoomPopup.addItems(withTitles: ["Fit", "Fill", "Actual Size"])
+        catalogSortPopup.addItems(withTitles: [
+            "Name (A–Z)", "Name (Z–A)", "Newest First", "Oldest First", "Largest First", "Smallest First",
+        ])
         zoomStepField.placeholderString = "1.2"
         slideshowField.placeholderString = "5"
         if #available(macOS 14.0, *) {
@@ -50,12 +55,14 @@ final class PreferencesWindowController: NSWindowController {
         appearancePopup.setAccessibilityIdentifier("preferences.appearance")
         backgroundPopup.setAccessibilityIdentifier("preferences.background")
         navigationWrapsButton.setAccessibilityIdentifier("preferences.navigationWraps")
+        catalogSortPopup.setAccessibilityIdentifier("preferences.catalogSort")
+        autoResizeButton.setAccessibilityIdentifier("preferences.autoResizeWindow")
 
-        for control in [appearancePopup, backgroundPopup, preloadPopup, initialZoomPopup] {
+        for control in [appearancePopup, backgroundPopup, preloadPopup, initialZoomPopup, catalogSortPopup] {
             control.target = self
             control.action = #selector(controlChanged(_:))
         }
-        for button in [navigationWrapsButton, welcomeButton, energySavingButton] {
+        for button in [navigationWrapsButton, welcomeButton, energySavingButton, autoResizeButton] {
             button.target = self
             button.action = #selector(controlChanged(_:))
         }
@@ -74,6 +81,7 @@ final class PreferencesWindowController: NSWindowController {
             row("Custom color", colorWell),
             row("Preload", preloadPopup),
             row("Initial zoom", initialZoomPopup),
+            row("Folder order", catalogSortPopup),
             row("Zoom step", zoomStepField),
             row("Slideshow seconds", slideshowField),
         ])
@@ -82,7 +90,7 @@ final class PreferencesWindowController: NSWindowController {
         grid.rowSpacing = 10
         grid.columnSpacing = 14
 
-        let stack = NSStackView(views: [grid, navigationWrapsButton, welcomeButton, energySavingButton])
+        let stack = NSStackView(views: [grid, navigationWrapsButton, autoResizeButton, welcomeButton, energySavingButton])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 12
@@ -109,6 +117,8 @@ final class PreferencesWindowController: NSWindowController {
         energySavingButton.state = preferences.animationEnergySaving ? .on : .off
         preloadPopup.selectItem(at: preferences.preloadLevel.rawValue)
         initialZoomPopup.selectItem(at: preferences.initialZoomMode.index)
+        catalogSortPopup.selectItem(at: preferences.catalogSort.index)
+        autoResizeButton.state = preferences.autoResizesWindow ? .on : .off
         zoomStepField.doubleValue = preferences.zoomStep
         slideshowField.doubleValue = preferences.slideshowInterval
         if let color = NSColor(lightViewHex: preferences.customBackgroundColorHex) {
@@ -129,6 +139,8 @@ final class PreferencesWindowController: NSWindowController {
         preferences.animationEnergySaving = energySavingButton.state == .on
         preferences.preloadLevel = PreloadLevel(rawValue: preloadPopup.indexOfSelectedItem) ?? .one
         preferences.initialZoomMode = InitialZoomMode.allCases[safe: initialZoomPopup.indexOfSelectedItem] ?? .fit
+        preferences.catalogSort = CatalogSort.allCases[safe: catalogSortPopup.indexOfSelectedItem] ?? .nameAscending
+        preferences.autoResizesWindow = autoResizeButton.state == .on
         preferences.zoomStep = zoomStepField.doubleValue
         preferences.slideshowInterval = slideshowField.doubleValue
         preferences.customBackgroundColorHex = colorWell.color.lightViewHex
@@ -175,6 +187,10 @@ private extension ViewerBackgroundPreference {
 }
 
 private extension InitialZoomMode {
+    var index: Int { Self.allCases.firstIndex(of: self) ?? 0 }
+}
+
+private extension CatalogSort {
     var index: Int { Self.allCases.firstIndex(of: self) ?? 0 }
 }
 

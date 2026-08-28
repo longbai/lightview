@@ -108,6 +108,11 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
             _ = load(request) { _ in }
         }
     }
+
+    public func handleMemoryPressure() {
+        cache.removeAllNonessential()
+        animationCache.removeAll()
+    }
 }
 
 private final class AnimationAssetCache: @unchecked Sendable {
@@ -140,6 +145,13 @@ private final class AnimationAssetCache: @unchecked Sendable {
             while recency.count > countLimit {
                 values.removeValue(forKey: recency.removeFirst())
             }
+        }
+    }
+
+    func removeAll() {
+        lock.withLock {
+            values.removeAll(keepingCapacity: false)
+            recency.removeAll(keepingCapacity: false)
         }
     }
 }

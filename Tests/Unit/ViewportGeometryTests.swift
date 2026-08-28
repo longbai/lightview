@@ -74,6 +74,45 @@ final class ViewportGeometryTests: XCTestCase {
         XCTAssertEqual(ViewportGeometry.clampedMagnification(1_000), 128)
     }
 
+    func testWindowContentSizeFitsImageWithinAvailableBounds() throws {
+        XCTAssertEqual(
+            try XCTUnwrap(ViewportGeometry.windowContentSize(
+                imageSize: CGSize(width: 4_000, height: 2_000),
+                availableSize: CGSize(width: 1_200, height: 800),
+                minimumSize: CGSize(width: 320, height: 240)
+            )),
+            CGSize(width: 1_200, height: 600)
+        )
+        XCTAssertEqual(
+            try XCTUnwrap(ViewportGeometry.windowContentSize(
+                imageSize: CGSize(width: 120, height: 80),
+                availableSize: CGSize(width: 1_200, height: 800),
+                minimumSize: CGSize(width: 320, height: 240)
+            )),
+            CGSize(width: 320, height: 240)
+        )
+        XCTAssertNil(ViewportGeometry.windowContentSize(
+            imageSize: .zero,
+            availableSize: CGSize(width: 1_200, height: 800),
+            minimumSize: CGSize(width: 320, height: 240)
+        ))
+    }
+
+    func testResolutionUpgradeOnlyWhenPresentationOutgrowsDecodedRaster() {
+        XCTAssertTrue(ViewportGeometry.requiresHigherResolution(
+            originalPixelSize: CGSize(width: 4_000, height: 2_000),
+            decodedPixelSize: CGSize(width: 1_000, height: 500),
+            presentationScale: 0.5,
+            backingScale: 2
+        ))
+        XCTAssertFalse(ViewportGeometry.requiresHigherResolution(
+            originalPixelSize: CGSize(width: 4_000, height: 2_000),
+            decodedPixelSize: CGSize(width: 1_000, height: 500),
+            presentationScale: 0.125,
+            backingScale: 2
+        ))
+    }
+
     private func imagePoint(
         at viewPoint: CGPoint,
         scale: CGFloat,
