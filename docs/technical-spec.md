@@ -287,6 +287,8 @@ The welcome keyboard map is built from the same immutable `CommandCatalog` used 
 
 Preferences are stored in `UserDefaults` using typed keys and validated ranges. Direct and App Store editions use the same schema, though their containers may store values separately.
 
+The original 1024 px application-icon master is retained under `Resources/AppIcon`. A macOS `AppIcon.appiconset` contains explicit 16, 32, 128, 256, 512, and 1024 px representations. Xcode's Asset Catalog compiler emits `AppIcon.icns` and the corresponding bundle metadata for Debug, Direct, and App Store builds; no runtime icon generation is used.
+
 ## 4. Concurrency model
 
 The minimum OS predates modern Swift concurrency deployment as a universally simple baseline, so version 1 shall use Foundation concurrency primitives that work reliably on macOS 10.15:

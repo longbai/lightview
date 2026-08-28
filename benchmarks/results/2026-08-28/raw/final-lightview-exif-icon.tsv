@@ -1,0 +1,16 @@
+timestamp	label	bundle_id	pid	sample	main_rss_kib	child_rss_kib	webkit_global_rss_kib
+2026-08-28T17:19:25Z	LightView-final-exif-icon	app.lightview.LightView	32281	1	142880	0	161984
+2026-08-28T17:19:26Z	LightView-final-exif-icon	app.lightview.LightView	32281	2	142880	0	161952
+2026-08-28T17:19:26Z	LightView-final-exif-icon	app.lightview.LightView	32281	3	140752	0	162352
+2026-08-28T17:19:27Z	LightView-final-exif-icon	app.lightview.LightView	32281	4	140720	0	162544
+2026-08-28T17:19:27Z	LightView-final-exif-icon	app.lightview.LightView	32281	5	140672	0	162736
+2026-08-28T17:19:33Z	LightView-final-exif-icon	app.lightview.LightView	32367	1	163408	0	169248
+2026-08-28T17:19:34Z	LightView-final-exif-icon	app.lightview.LightView	32367	2	163280	0	169408
+2026-08-28T17:19:34Z	LightView-final-exif-icon	app.lightview.LightView	32367	3	145536	0	168528
+2026-08-28T17:19:35Z	LightView-final-exif-icon	app.lightview.LightView	32367	4	145536	0	168768
+2026-08-28T17:19:36Z	LightView-final-exif-icon	app.lightview.LightView	32367	5	145536	0	168800
+2026-08-28T17:19:41Z	LightView-final-exif-icon	app.lightview.LightView	32465	1	108256	0	172976
+2026-08-28T17:19:42Z	LightView-final-exif-icon	app.lightview.LightView	32465	2	108176	0	173360
+2026-08-28T17:19:42Z	LightView-final-exif-icon	app.lightview.LightView	32465	3	108128	0	173392
+2026-08-28T17:19:43Z	LightView-final-exif-icon	app.lightview.LightView	32465	4	108128	0	173552
+2026-08-28T17:19:44Z	LightView-final-exif-icon	app.lightview.LightView	32465	5	108128	0	173584

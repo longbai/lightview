@@ -166,6 +166,8 @@ LightView shall support:
 
 LightView shall not bundle Tovi's picture-theme assets.
 
+LightView shall ship an original application icon that remains recognizable at 16 px, contains no text, and does not imitate qView, Tovi, Apple Quick Look, Preview, or Photos branding. The source master and all required macOS icon representations shall be versioned with the project.
+
 ### 3.10 Preferences and shortcuts
 
 Preferences shall include appearance, background, sort order, wrapping, preload level, slideshow interval, animation energy saving, initial zoom mode, zoom step, window resizing behavior, and welcome-guide visibility. Slideshow direction is selected by the fixed forward/reverse commands rather than stored as a preference.

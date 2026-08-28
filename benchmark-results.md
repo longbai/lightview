@@ -13,7 +13,7 @@ The reproducible 2026-08-28 comparison now covers LightView 0.1.0, qView 7.1, in
 
 See [`benchmarks/results/2026-08-28/summary.md`](benchmarks/results/2026-08-28/summary.md) for method, variability, WebKit attribution, application identities, and raw-file links. The older two-app study below is retained as historical evidence; its one-shot huge-image figures are superseded by the alternating three-round corpus.
 
-The final Direct binary was subsequently rechecked alone over three rounds (15 samples): 136.42 MiB median RSS, 134.90 MiB mean, and 118.63–142.08 MiB range, with zero descendant RSS. This remains below the accepted alternating-comparison median but does not replace that protocol.
+The final Direct binary was subsequently rechecked after the EXIF, HEIC, rich-title, and application-icon changes over three rounds (15 samples): 137.45 MiB median RSS, 130.99 MiB mean, and 105.59–159.58 MiB range, with zero descendant RSS. Its logical bundle is now 7.01 MiB and the universal main Mach-O is 3.31 MiB; the compiled icon asset catalog accounts for 2.50 MiB. This follow-up does not replace the alternating four-application protocol.
 
 ## Historical Tovi 1.5 vs SimpView comparison
 

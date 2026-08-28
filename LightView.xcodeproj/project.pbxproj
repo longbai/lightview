@@ -98,6 +98,7 @@
 		20000000000000000000005A /* GeometryPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000063 /* GeometryPerformanceTests.swift */; };
 		20000000000000000000005B /* DecodePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000064 /* DecodePerformanceTests.swift */; };
 		20000000000000000000005C /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000065 /* THIRD_PARTY_NOTICES.md */; };
+		20000000000000000000005D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000066 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -207,6 +208,7 @@
 		300000000000000000000063 /* GeometryPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeometryPerformanceTests.swift; sourceTree = "<group>"; };
 		300000000000000000000064 /* DecodePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodePerformanceTests.swift; sourceTree = "<group>"; };
 		300000000000000000000065 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = THIRD_PARTY_NOTICES.md; sourceTree = "<group>"; };
+		300000000000000000000066 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -223,7 +225,7 @@
 		700000000000000000000004 /* Application */ = {isa = PBXGroup; children = (300000000000000000000001 /* main.swift */, 300000000000000000000002 /* AppDelegate.swift */, 300000000000000000000003 /* AppCoordinator.swift */, 30000000000000000000002E /* AppKitSystemWorkspace.swift */,); path = Application; sourceTree = "<group>"; };
 		700000000000000000000005 /* Core */ = {isa = PBXGroup; children = (300000000000000000000005 /* LightViewCore.swift */, 30000000000000000000000F /* ProductIdentity.swift */,); path = Core; sourceTree = "<group>"; };
 		700000000000000000000006 /* Tests */ = {isa = PBXGroup; children = (700000000000000000000017 /* Integration */, 70000000000000000000000B /* Unit */, 700000000000000000000018 /* Performance */, 700000000000000000000011 /* UI */,); path = Tests; sourceTree = "<group>"; };
-		700000000000000000000007 /* Resources */ = {isa = PBXGroup; children = (30000000000000000000000E /* Info.plist */, 30000000000000000000005C /* Localizable.strings */,); path = Resources; sourceTree = "<group>"; };
+		700000000000000000000007 /* Resources */ = {isa = PBXGroup; children = (30000000000000000000000E /* Info.plist */, 300000000000000000000066 /* Assets.xcassets */, 30000000000000000000005C /* Localizable.strings */,); path = Resources; sourceTree = "<group>"; };
 		700000000000000000000008 /* Frameworks */ = {isa = PBXGroup; children = (30000000000000000000000C /* XCTest.framework */,); name = Frameworks; sourceTree = "<group>"; };
 		700000000000000000000009 /* Products */ = {isa = PBXGroup; children = (30000000000000000000000B /* LightView.app */, 30000000000000000000000A /* LightViewCore.framework */, 30000000000000000000000D /* LightViewTests.xctest */, 300000000000000000000028 /* LightViewUITests.xctest */,); name = Products; sourceTree = "<group>"; };
 		70000000000000000000000A /* Viewer */ = {isa = PBXGroup; children = (300000000000000000000022 /* ViewingSession.swift */, 300000000000000000000004 /* ViewerWindowController.swift */,); path = Viewer; sourceTree = "<group>"; };
@@ -259,7 +261,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin PBXResourcesBuildPhase section */
-		900000000000000000000004 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (200000000000000000000055 /* Localizable.strings in Resources */, 20000000000000000000005C /* THIRD_PARTY_NOTICES.md in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+		900000000000000000000004 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (200000000000000000000055 /* Localizable.strings in Resources */, 20000000000000000000005C /* THIRD_PARTY_NOTICES.md in Resources */, 20000000000000000000005D /* Assets.xcassets in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
@@ -300,8 +302,8 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		B00000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000008 /* Debug.xcconfig */; buildSettings = {INFOPLIST_FILE = Resources/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightView; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = Debug; };
-		B00000000000000000000002 /* Release-Direct */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000009 /* Direct.xcconfig */; buildSettings = {CODE_SIGN_ENTITLEMENTS = Config/Direct.entitlements; INFOPLIST_FILE = Resources/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightView; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = "Release-Direct"; };
+		B00000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000008 /* Debug.xcconfig */; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; INFOPLIST_FILE = Resources/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightView; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = Debug; };
+		B00000000000000000000002 /* Release-Direct */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000009 /* Direct.xcconfig */; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = Config/Direct.entitlements; INFOPLIST_FILE = Resources/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightView; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = "Release-Direct"; };
 		B00000000000000000000003 /* Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000008 /* Debug.xcconfig */; buildSettings = {DEFINES_MODULE = YES; DYLIB_INSTALL_NAME_BASE = "@rpath"; GENERATE_INFOPLIST_FILE = YES; MACH_O_TYPE = staticlib; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightViewCore; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SKIP_INSTALL = YES; SWIFT_OBJC_BRIDGING_HEADER = Sources/Core/LightViewCore-Bridging-Header.h;}; name = Debug; };
 		B00000000000000000000004 /* Release-Direct */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000009 /* Direct.xcconfig */; buildSettings = {DEFINES_MODULE = YES; DYLIB_INSTALL_NAME_BASE = "@rpath"; GENERATE_INFOPLIST_FILE = YES; MACH_O_TYPE = staticlib; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightViewCore; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SKIP_INSTALL = YES; SWIFT_OBJC_BRIDGING_HEADER = Sources/Core/LightViewCore-Bridging-Header.h;}; name = "Release-Direct"; };
 		B00000000000000000000005 /* Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000008 /* Debug.xcconfig */; buildSettings = {BUNDLE_LOADER = ""; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightViewTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = Debug; };
@@ -310,7 +312,7 @@
 		B00000000000000000000008 /* Release-Direct */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000009 /* Direct.xcconfig */; buildSettings = {SDKROOT = macosx;}; name = "Release-Direct"; };
 		B00000000000000000000009 /* Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000008 /* Debug.xcconfig */; buildSettings = {GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightViewUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; TEST_TARGET_NAME = LightView;}; name = Debug; };
 		B0000000000000000000000A /* Release-Direct */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000009 /* Direct.xcconfig */; buildSettings = {GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightViewUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; TEST_TARGET_NAME = LightView;}; name = "Release-Direct"; };
-		B0000000000000000000000B /* Release-AppStore */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000059 /* AppStore.xcconfig */; buildSettings = {CODE_SIGN_ENTITLEMENTS = Config/AppStore.entitlements; INFOPLIST_FILE = Resources/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightView; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = "Release-AppStore"; };
+		B0000000000000000000000B /* Release-AppStore */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000059 /* AppStore.xcconfig */; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = Config/AppStore.entitlements; INFOPLIST_FILE = Resources/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightView; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = "Release-AppStore"; };
 		B0000000000000000000000C /* Release-AppStore */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000059 /* AppStore.xcconfig */; buildSettings = {DEFINES_MODULE = YES; DYLIB_INSTALL_NAME_BASE = "@rpath"; GENERATE_INFOPLIST_FILE = YES; MACH_O_TYPE = staticlib; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightViewCore; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx; SKIP_INSTALL = YES; SWIFT_OBJC_BRIDGING_HEADER = Sources/Core/LightViewCore-Bridging-Header.h;}; name = "Release-AppStore"; };
 		B0000000000000000000000D /* Release-AppStore */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000059 /* AppStore.xcconfig */; buildSettings = {BUNDLE_LOADER = ""; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = app.lightview.LightViewTests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = macosx;}; name = "Release-AppStore"; };
 		B0000000000000000000000E /* Release-AppStore */ = {isa = XCBuildConfiguration; baseConfigurationReference = 300000000000000000000059 /* AppStore.xcconfig */; buildSettings = {SDKROOT = macosx;}; name = "Release-AppStore"; };

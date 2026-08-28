@@ -1,5 +1,7 @@
 # LightView
 
+<img src="Resources/AppIcon/LightView-master.png" alt="LightView application icon" width="128">
+
 LightView is a lightweight, native image viewer for macOS, written in Swift with AppKit. It combines the focused viewing, folder navigation, animation, slideshow, image information, and MP4-export capabilities selected from qView and Tovi in a new codebase. It does not use SwiftUI, WebKit, Qt, Electron, or browser rendering.
 
 The current code is a release candidate, not a notarized public release. It builds and runs on the current Apple silicon test Mac; Intel Catalina and Apple silicon Big Sur remain explicit real-system release gates.
@@ -13,6 +15,7 @@ The current code is a release candidate, not a notarized public release. It buil
 - Forward/reverse slideshow and silent H.264 MP4 export at 480p, 720p, or 1080p with fit/fill, backgrounds, slide/fade transitions, progress, and cancellation.
 - Typed AppKit preferences for appearance, background, folder order, wrapping, preload, zoom, slideshow interval, energy saving, window resize, and welcome-guide visibility.
 - Two configurations from the same source: unsandboxed Direct and sandboxed App Store.
+- Original LightView app icon supplied through a Catalina-compatible macOS Asset Catalog, with 16–1024 px representations.
 - No telemetry, accounts, ads, image upload, network image loading, or in-app updater.
 
 The native welcome window is the feature/shortcut overview. It can be reopened from **Help → LightView Guide** and disabled for new empty windows in Settings.
@@ -87,7 +90,7 @@ On an Apple M1 MacBook Pro with 16 GB RAM and macOS 26.6.2, all four application
 
 Tovi was highly state-sensitive (roughly 33–409 MiB across the three runs). Existing global WebKit process RSS did not change during those runs, so no helper increment was added; that does not establish zero WebKit cost. RSS includes shared pages and is not private footprint. Full methodology, ranges, hashes, identities, raw TSVs, and the superseded launch method are in [benchmark-results.md](benchmark-results.md) and [the accepted benchmark summary](benchmarks/results/2026-08-28/summary.md). Re-run with `./scripts/benchmark-suite.sh`; individual runs use `./scripts/benchmark-app.sh APP FIXTURE LABEL OUTPUT_TSV`.
 
-After the final preference, memory-pressure, full-resolution, and notice changes, the final Direct binary was rechecked alone for three rounds (15 samples): median 136.42 MiB, mean 134.90 MiB, range 118.63–142.08 MiB, with no descendants. This is a final-binary regression check, not a replacement for the alternating four-application comparison. The raw samples are in `raw/final-lightview-validation.tsv` beside the accepted corpus.
+After the EXIF, HEIC, title, and application-icon changes, the final Direct binary was rechecked alone for three rounds (15 samples): median 137.45 MiB, mean 130.99 MiB, range 105.59–159.58 MiB, with no descendants. Its current logical bundle size is 7.01 MiB and its universal main Mach-O is 3.31 MiB; most bundle growth comes from the 2.50 MiB compiled icon asset catalog. This is a final-binary regression check, not a replacement for the alternating four-application comparison. The raw samples are in `raw/final-lightview-exif-icon.tsv` beside the accepted corpus.
 
 ## Architecture and scope
 

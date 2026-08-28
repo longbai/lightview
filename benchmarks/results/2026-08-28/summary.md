@@ -37,13 +37,14 @@ Tovi varied sharply: two runs settled near 409 MiB and one near 33 MiB, so the m
 
 The first corpus under `raw-superseded-direct-argv/` is intentionally retained but excluded. Passing the image as a raw executable argument did not reliably deliver an open-document event to SimpView. The accepted `raw/` corpus uses LaunchServices for all reference viewers and LightView's deterministic UI-test open argument.
 
-The final Direct binary was revalidated alone after the last code and resource changes. Its 15 samples had a 136.42 MiB median, 134.90 MiB mean, 118.63–142.08 MiB range, and zero descendant RSS. These samples are retained in `raw/final-lightview-validation.tsv`; because the other viewers were not interleaved in that follow-up, the four-viewer table above remains the fair comparison result.
+The final Direct binary was revalidated again after the EXIF, HEIC, rich-title, and application-icon changes. Its 15 samples had a 137.45 MiB median, 130.99 MiB mean, 105.59–159.58 MiB range, and zero descendant RSS. The current artifact is 7.01 MiB logically with a 3.31 MiB universal main Mach-O. These samples are retained in `raw/final-lightview-exif-icon.tsv`; because the other viewers were not interleaved in that follow-up, the four-viewer table above remains the fair comparison result.
 
 ## Evidence
 
 - Environment and fixture identity: `environment.json`
 - Accepted measurements: `raw/round-1.tsv`, `raw/round-2.tsv`, `raw/round-3.tsv`
 - Final LightView-only regression check: `raw/final-lightview-validation.tsv`
+- Post-EXIF/icon LightView-only regression check: `raw/final-lightview-exif-icon.tsv`
 - Exact bundle/Mach-O values: `raw/sizes.tsv`
 - Per-run WebKit baselines: `raw/*-webkit.tsv`
 - Superseded method retained for audit: `raw-superseded-direct-argv/`

@@ -39,12 +39,25 @@ resource_digest() {
     fi
     (
         cd "$resource_root"
-        find . -type f -print0 \
+        find . -type f ! -name Assets.car -print0 \
             | LC_ALL=C sort -z \
             | xargs -0 shasum -a 256 \
             | shasum -a 256 \
             | awk '{print $1}'
     )
+}
+
+asset_catalog_digest() {
+    local resource_root="$1"
+    local asset_catalog="$resource_root/Assets.car"
+    [[ -f "$asset_catalog" ]] || { echo "empty"; return; }
+    local asset_info
+    asset_info="$(mktemp)"
+    xcrun assetutil --info "$asset_catalog" >"$asset_info"
+    # The first record contains deployment target and build timestamp only.
+    plutil -remove 0 "$asset_info"
+    shasum -a 256 "$asset_info" | awk '{print $1}'
+    rm -f "$asset_info"
 }
 
 build_slice x86_64 10.15 "$x86_root"
@@ -58,6 +71,12 @@ x86_resources="$(resource_digest "$x86_app/Contents/Resources")"
 arm_resources="$(resource_digest "$arm_app/Contents/Resources")"
 [[ "$x86_resources" == "$arm_resources" ]] || {
     echo "Architecture resource payloads differ" >&2
+    exit 4
+}
+x86_assets="$(asset_catalog_digest "$x86_app/Contents/Resources")"
+arm_assets="$(asset_catalog_digest "$arm_app/Contents/Resources")"
+[[ "$x86_assets" == "$arm_assets" ]] || {
+    echo "Architecture asset-catalog renditions differ" >&2
     exit 4
 }
 
