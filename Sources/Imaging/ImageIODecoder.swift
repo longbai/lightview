@@ -69,7 +69,9 @@ public struct ImageIODecoder: ImageDecoding {
             decodedPixelSize: CGSize(width: image.width, height: image.height),
             orientation: .up,
             metadata: inspection.metadata,
-            decodedByteCost: byteCost
+            decodedByteCost: byteCost,
+            format: inspection.format,
+            frameCount: inspection.frameCount
         )
     }
 

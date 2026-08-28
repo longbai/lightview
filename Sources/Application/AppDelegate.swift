@@ -7,10 +7,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let coordinator = AppCoordinator()
         self.coordinator = coordinator
-        if let path = UserDefaults.standard.string(forKey: "LightViewUITestOpenPath") {
+        if let path = UserDefaults.standard.string(forKey: "LightViewUITestShowInfoPath") {
+            coordinator.showInformationForTesting(path: path)
+        } else if let path = UserDefaults.standard.string(forKey: "LightViewUITestOpenPath") {
             coordinator.open(URL(fileURLWithPath: path))
         } else {
             coordinator.openEmptyWindow()
+        }
+        if UserDefaults.standard.bool(forKey: "LightViewUITestShowPreferences") {
+            coordinator.showPreferences(nil)
         }
         NSApplication.shared.activate(ignoringOtherApps: true)
     }

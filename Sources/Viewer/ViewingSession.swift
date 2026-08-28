@@ -61,6 +61,11 @@ public final class ViewingSession: @unchecked Sendable {
         open(entry.url)
     }
 
+    public func reload(targetPixelSize: CGSize? = nil) {
+        guard let currentURL else { return }
+        open(currentURL, targetPixelSize: targetPixelSize)
+    }
+
     public func clear() {
         activeCancellation?.cancel()
         activeCancellation = nil

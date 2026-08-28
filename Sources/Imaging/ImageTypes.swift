@@ -71,6 +71,8 @@ public struct RasterAsset: @unchecked Sendable {
     public let orientation: CGImagePropertyOrientation
     public let metadata: ImageMetadata
     public let decodedByteCost: Int
+    public let format: ImageFormat
+    public let frameCount: Int
 
     public init(
         image: CGImage,
@@ -78,7 +80,9 @@ public struct RasterAsset: @unchecked Sendable {
         decodedPixelSize: CGSize,
         orientation: CGImagePropertyOrientation,
         metadata: ImageMetadata,
-        decodedByteCost: Int
+        decodedByteCost: Int,
+        format: ImageFormat = .unknown,
+        frameCount: Int = 1
     ) {
         self.image = image
         self.originalPixelSize = originalPixelSize
@@ -86,6 +90,8 @@ public struct RasterAsset: @unchecked Sendable {
         self.orientation = orientation
         self.metadata = metadata
         self.decodedByteCost = decodedByteCost
+        self.format = format
+        self.frameCount = max(1, frameCount)
     }
 }
 

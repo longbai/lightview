@@ -1,6 +1,6 @@
 import Foundation
 
-public enum CatalogSort: Sendable {
+public enum CatalogSort: String, Sendable, CaseIterable {
     case nameAscending
     case nameDescending
     case modificationDateNewest

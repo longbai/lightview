@@ -5,18 +5,26 @@ import LightViewCore
 final class AppCoordinator: NSObject {
     private let preferences = PreferencesStore()
     private let pipeline = ImageLoadPipeline()
+    private let systemIntegration = SystemIntegration(workspace: AppKitSystemWorkspace())
     private var windowControllers: [ViewerWindowController] = []
+    private var preferencesWindowController: PreferencesWindowController?
+    private var informationWindowController: ImageInfoWindowController?
+    private let openRecentMenu = NSMenu(title: "Open Recent")
+    private var backgroundCancellation: DecodeCancellation?
 
     override init() {
         super.init()
         buildMainMenu()
+        applyPreferences()
     }
 
     func makeWindowController() -> ViewerWindowController {
         let controller = ViewerWindowController(
             session: ViewingSession(loader: pipeline),
             preferences: preferences,
-            onOpenPanelRequest: { [weak self] in self?.showOpenPanel(nil) }
+            systemIntegration: systemIntegration,
+            onOpenPanelRequest: { [weak self] in self?.showOpenPanel(nil) },
+            onShowInformation: { [weak self] model in self?.showInformation(model) }
         )
         windowControllers.append(controller)
         return controller
@@ -29,6 +37,7 @@ final class AppCoordinator: NSObject {
         controller.showWindow(nil)
         controller.open(url)
         NSDocumentController.shared.noteNewRecentDocumentURL(url)
+        refreshOpenRecentMenu()
     }
 
     @objc func newWindow(_ sender: Any?) { openEmptyWindow() }
@@ -49,12 +58,37 @@ final class AppCoordinator: NSObject {
         controller.showWelcome()
     }
 
+    @objc func showPreferences(_ sender: Any?) {
+        if preferencesWindowController == nil {
+            let controller = PreferencesWindowController(preferences: preferences)
+            controller.onPreferencesChanged = { [weak self] in self?.applyPreferences() }
+            preferencesWindowController = controller
+        }
+        preferencesWindowController?.showWindow(sender)
+        preferencesWindowController?.window?.makeKeyAndOrderFront(sender)
+    }
+
+    @objc func openRecent(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? URL else { return }
+        open(url)
+    }
+
+    func showInformationForTesting(path: String) {
+        let url = URL(fileURLWithPath: path)
+        open(url)
+        guard let controller = windowControllers.first(where: { $0.session.currentURL == url.standardizedFileURL }) else { return }
+        controller.showImageInformationWhenReady()
+    }
+
     private func buildMainMenu() {
         let main = NSMenu()
         let appItem = NSMenuItem()
         main.addItem(appItem)
         let appMenu = NSMenu()
         appMenu.addItem(withTitle: "About LightView", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let preferencesItem = NSMenuItem(title: "Settings…", action: #selector(showPreferences(_:)), keyEquivalent: ",")
+        preferencesItem.target = self
+        appMenu.addItem(preferencesItem)
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Quit LightView", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
@@ -62,10 +96,15 @@ final class AppCoordinator: NSObject {
         let fileMenu = NSMenu(title: "File")
         add(.newWindow, to: fileMenu, action: #selector(newWindow(_:)), target: self)
         add(.open, to: fileMenu, action: #selector(showOpenPanel(_:)), target: self)
+        let openRecentItem = NSMenuItem(title: "Open Recent", action: nil, keyEquivalent: "")
+        openRecentItem.submenu = openRecentMenu
+        fileMenu.addItem(openRecentItem)
         fileMenu.addItem(.separator())
         add(.closeWindow, to: fileMenu, action: #selector(NSWindow.performClose(_:)))
-        add(.information, to: fileMenu, action: #selector(NSResponder.showImageInformation(_:)))
-        add(.revealInFinder, to: fileMenu, action: #selector(NSResponder.revealImageInFinder(_:)))
+        add(.information, to: fileMenu, action: #selector(ViewerWindowController.showImageInformation(_:)))
+        add(.openWith, to: fileMenu, action: #selector(ViewerWindowController.openImageWith(_:)))
+        add(.reload, to: fileMenu, action: #selector(ViewerWindowController.reloadImage(_:)))
+        add(.revealInFinder, to: fileMenu, action: #selector(ViewerWindowController.revealImageInFinder(_:)))
         fileMenu.addItem(.separator())
         add(.exportMP4, to: fileMenu, action: #selector(NSResponder.exportMP4(_:)))
         append(fileMenu, titled: "File", to: main)
@@ -101,6 +140,7 @@ final class AppCoordinator: NSObject {
         append(helpMenu, titled: "Help", to: main)
         NSApplication.shared.helpMenu = helpMenu
         NSApplication.shared.mainMenu = main
+        refreshOpenRecentMenu()
     }
 
     private func append(_ menu: NSMenu, titled title: String, to main: NSMenu) {
@@ -116,6 +156,70 @@ final class AppCoordinator: NSObject {
         item.target = target
         menu.addItem(item)
     }
+
+    private func showInformation(_ model: ImageInformationModel) {
+        if let informationWindowController {
+            informationWindowController.update(model: model)
+        } else {
+            informationWindowController = ImageInfoWindowController(model: model)
+        }
+        informationWindowController?.showWindow(nil)
+        informationWindowController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    private func refreshOpenRecentMenu() {
+        openRecentMenu.removeAllItems()
+        for url in NSDocumentController.shared.recentDocumentURLs.prefix(10) {
+            let item = NSMenuItem(title: url.lastPathComponent, action: #selector(openRecent(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = url
+            openRecentMenu.addItem(item)
+        }
+        if openRecentMenu.items.isEmpty {
+            let empty = NSMenuItem(title: "No Recent Items", action: nil, keyEquivalent: "")
+            empty.isEnabled = false
+            openRecentMenu.addItem(empty)
+        }
+    }
+
+    private func applyPreferences() {
+        switch preferences.appearance {
+        case .followSystem: NSApplication.shared.appearance = nil
+        case .light: NSApplication.shared.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApplication.shared.appearance = NSAppearance(named: .darkAqua)
+        }
+        windowControllers.forEach { $0.applyPreferences() }
+        loadBackgroundImageIfNeeded()
+    }
+
+    private func loadBackgroundImageIfNeeded() {
+        backgroundCancellation?.cancel()
+        backgroundCancellation = nil
+        guard preferences.viewerBackground == .customImage,
+              let url = preferences.backgroundImageURL else {
+            windowControllers.forEach { $0.setBackgroundAsset(nil) }
+            return
+        }
+        let screen = NSScreen.main
+        let logicalSize = screen?.frame.size ?? CGSize(width: 1_920, height: 1_080)
+        let target = DisplayRasterState(
+            logicalViewportSize: logicalSize,
+            backingScale: screen?.backingScaleFactor ?? 1,
+            imageSpaceCenter: .zero
+        ).targetPixelSize
+        let request = DecodeRequest(
+            url: url,
+            targetPixelSize: target,
+            requiresFullResolution: false,
+            generation: 0
+        )
+        backgroundCancellation = pipeline.load(request) { [weak self] result in
+            guard case .success(let asset) = result else { return }
+            DispatchQueue.main.async { [weak self] in
+                self?.windowControllers.forEach { $0.setBackgroundAsset(asset) }
+            }
+        }
+    }
 }
 
 private extension CommandModifiers {
@@ -130,7 +234,5 @@ private extension CommandModifiers {
 }
 
 @objc private extension NSResponder {
-    func showImageInformation(_ sender: Any?) {}
-    func revealImageInFinder(_ sender: Any?) {}
     func exportMP4(_ sender: Any?) {}
 }

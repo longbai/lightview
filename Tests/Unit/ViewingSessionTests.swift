@@ -52,6 +52,26 @@ final class ViewingSessionTests: XCTestCase {
         session.navigate(.next)
         XCTAssertEqual(loader.lastRequest?.url, firstURL)
     }
+
+    @MainActor
+    func testReloadReopensCurrentURLWithoutOwningViewportState() {
+        let loader = ControlledImageLoader()
+        let session = ViewingSession(loader: loader)
+        let url = URL(fileURLWithPath: "/tmp/reload.png")
+        var viewport = ViewportState(mode: .fill, magnification: 2, translation: CGPoint(x: 4, y: 8))
+
+        session.open(url)
+        let firstGeneration = session.generation
+        session.reload()
+
+        XCTAssertEqual(session.currentURL, url)
+        XCTAssertEqual(session.generation, firstGeneration + 1)
+        XCTAssertEqual(loader.lastRequest?.url, url)
+        XCTAssertEqual(viewport.mode, .fill)
+        XCTAssertEqual(viewport.translation, CGPoint(x: 4, y: 8))
+        viewport.rotationDegrees = 90
+        XCTAssertEqual(viewport.rotationDegrees, 90)
+    }
 }
 
 private final class ControlledImageLoader: ImageLoading, @unchecked Sendable {

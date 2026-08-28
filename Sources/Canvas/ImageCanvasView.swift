@@ -12,12 +12,16 @@ final class ImageCanvasView: NSView {
     var viewerBackgroundColor: NSColor = .black {
         didSet { needsDisplay = true }
     }
+    var backgroundAsset: RasterAsset? {
+        didSet { needsDisplay = true }
+    }
 
     private var dragOrigin: CGPoint?
     private var translationAtDragStart = CGPoint.zero
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        wantsLayer = true
         setAccessibilityElement(true)
         setAccessibilityRole(.group)
         setAccessibilityIdentifier("viewer.canvas")
@@ -27,9 +31,16 @@ final class ImageCanvasView: NSView {
 
     override var acceptsFirstResponder: Bool { true }
 
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        layer?.contentsScale = window?.backingScaleFactor ?? 1
+        needsDisplay = true
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         viewerBackgroundColor.setFill()
         dirtyRect.fill()
+        drawBackgroundImageIfNeeded()
         guard let asset,
               let scale = presentationScale(for: asset.originalPixelSize),
               let context = NSGraphicsContext.current?.cgContext else { return }
@@ -48,6 +59,31 @@ final class ImageCanvasView: NSView {
         let height = asset.originalPixelSize.height * scale
         context.interpolationQuality = scale >= 1 ? .none : .high
         context.draw(asset.image, in: CGRect(x: -width / 2, y: -height / 2, width: width, height: height))
+        context.restoreGState()
+    }
+
+    private func drawBackgroundImageIfNeeded() {
+        guard let backgroundAsset,
+              let context = NSGraphicsContext.current?.cgContext,
+              let scale = ViewportGeometry.fillScale(
+                  imageSize: backgroundAsset.originalPixelSize,
+                  viewportSize: bounds.size
+              ) else { return }
+        let size = CGSize(
+            width: backgroundAsset.originalPixelSize.width * scale,
+            height: backgroundAsset.originalPixelSize.height * scale
+        )
+        context.saveGState()
+        context.interpolationQuality = .high
+        context.draw(
+            backgroundAsset.image,
+            in: CGRect(
+                x: bounds.midX - size.width / 2,
+                y: bounds.midY - size.height / 2,
+                width: size.width,
+                height: size.height
+            )
+        )
         context.restoreGState()
     }
 

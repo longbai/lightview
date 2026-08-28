@@ -21,6 +21,8 @@ public enum CommandIdentifier: String, CaseIterable, Hashable, Sendable {
     case togglePlayback
     case toggleSlideshow
     case information
+    case openWith
+    case reload
     case revealInFinder
     case exportMP4
 }
@@ -82,7 +84,9 @@ public enum CommandCatalog {
         .init(identifier: .togglePlayback, title: "Play or Pause Animation", keyEquivalent: " ", shortcutDescription: "Space"),
         .init(identifier: .toggleSlideshow, title: "Start or Stop Slideshow", keyEquivalent: "\r", shortcutDescription: "Return"),
         .init(identifier: .information, title: "File Information", keyEquivalent: "i", modifiers: .command, shortcutDescription: "⌘I"),
-        .init(identifier: .revealInFinder, title: "Reveal in Finder", keyEquivalent: "r", modifiers: .command, shortcutDescription: "⌘R"),
+        .init(identifier: .openWith, title: "Open With…", keyEquivalent: "", shortcutDescription: ""),
+        .init(identifier: .reload, title: "Reload", keyEquivalent: "r", modifiers: .command, shortcutDescription: "⌘R"),
+        .init(identifier: .revealInFinder, title: "Reveal in Finder", keyEquivalent: "", shortcutDescription: ""),
         .init(identifier: .exportMP4, title: "Export MP4…", keyEquivalent: "e", modifiers: .command, shortcutDescription: "⌘E"),
     ]
 
