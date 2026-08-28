@@ -136,5 +136,7 @@ public enum ImageLoadError: Error, Sendable, Equatable {
     case unsupported(ImageFormat)
     case corrupt(URL)
     case cancelled
+    case unsafeExternalResource(URL)
+    case sourceTooLarge(actual: Int, limit: Int)
     case decodeFailed(String)
 }

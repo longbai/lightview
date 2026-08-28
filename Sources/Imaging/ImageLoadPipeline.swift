@@ -21,7 +21,7 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
     private let callbackQueue: DispatchQueue
 
     public init(
-        decoder: any ImageDecoding = ImageIODecoder(),
+        decoder: any ImageDecoding = ImageDecoderRouter(),
         cache: RasterCache = RasterCache(byteLimit: 256 * 1_024 * 1_024),
         decodeQueue: OperationQueue? = nil,
         callbackQueue: DispatchQueue = .main
