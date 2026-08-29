@@ -11,7 +11,7 @@ version="${1:-$plist_version}"
 tag="v$version"
 
 repository="${LIGHTVIEW_GITHUB_REPOSITORY:-longbai/lightview}"
-notary_profile="${LIGHTVIEW_NOTARY_PROFILE:-LightView}"
+notary_profile="${LIGHTVIEW_NOTARY_PROFILE:-LightView-Notary}"
 sign_identity="${LIGHTVIEW_CODE_SIGN_IDENTITY:-}"
 
 if [[ "$version" != "$plist_version" ]]; then

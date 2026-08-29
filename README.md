@@ -87,10 +87,10 @@ The release script builds separate Intel and Apple silicon DMGs, signs and notar
 ./scripts/release-github.sh 1.0.1
 ```
 
-It reads the version from `Resources/Info.plist` and refuses a mismatched argument, dirty working tree, or existing tag. No credentials are stored in the repository. By default it uses the `LightView` notarytool Keychain profile and the first valid Developer ID Application identity. These can be overridden locally:
+It reads the version from `Resources/Info.plist` and refuses a mismatched argument, dirty working tree, or existing tag. No credentials are stored in the repository. By default it uses the `LightView-Notary` notarytool Keychain profile and the first valid Developer ID Application identity. These can be overridden locally:
 
 ```bash
-LIGHTVIEW_NOTARY_PROFILE=LightView \
+LIGHTVIEW_NOTARY_PROFILE=LightView-Notary \
 LIGHTVIEW_CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 LIGHTVIEW_GITHUB_REPOSITORY=longbai/lightview \
 ./scripts/release-github.sh 1.0.1
