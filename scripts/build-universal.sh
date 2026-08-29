@@ -14,6 +14,11 @@ x86_root="$release_root/x86_64"
 arm_root="$release_root/arm64"
 output_app="$release_root/LightView.app"
 sign_identity="${LIGHTVIEW_CODE_SIGN_IDENTITY:--}"
+if [[ "$sign_identity" == "-" ]]; then
+    timestamp_arguments=(--timestamp=none)
+else
+    timestamp_arguments=(--timestamp)
+fi
 
 build_slice() {
     local architecture="$1"
@@ -112,11 +117,11 @@ fi
 if [[ -d "$output_app/Contents/Frameworks" ]]; then
     while IFS= read -r -d '' nested_code; do
         if file "$nested_code" | grep -q 'Mach-O'; then
-            codesign --force --sign "$sign_identity" --timestamp=none "$nested_code"
+            codesign --force --sign "$sign_identity" "${timestamp_arguments[@]}" "$nested_code"
         fi
     done < <(find "$output_app/Contents/Frameworks" -type f -print0)
 fi
-codesign --force --sign "$sign_identity" --timestamp=none --options runtime \
+codesign --force --sign "$sign_identity" "${timestamp_arguments[@]}" --options runtime \
     --entitlements "$project_root/$entitlements" "$output_app"
 
 "$project_root/scripts/verify-artifact.sh" "$output_app" "$configuration"

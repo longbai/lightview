@@ -18,10 +18,10 @@
 
 ## Distribution signing
 
-The generated artifacts are intentionally ad hoc signed for local verification. Gatekeeper rejects both and stapler reports no ticket, which is expected and was verified on 2026-08-28.
+Local artifacts default to ad hoc signing for development verification. The GitHub v1.0.0 Direct arm64 and x86_64 DMGs were Developer ID signed, accepted by Apple's notarization service, and stapled on 2026-08-29. Both the DMGs and their contained applications pass Gatekeeper assessment as `Notarized Developer ID` and pass `stapler validate`.
 
-- [ ] Sign Direct with a Developer ID Application certificate.
-- [ ] Submit Direct for notarization, staple the accepted ticket, and require `spctl --assess` plus `stapler validate` to pass.
+- [x] Sign Direct with a Developer ID Application certificate.
+- [x] Submit Direct for notarization, staple the accepted ticket, and require `spctl --assess` plus `stapler validate` to pass.
 - [ ] Sign/archive App Store with the correct Mac App Distribution profile and validate/upload through Xcode or Transporter.
 - [ ] Confirm App Store receipt/sandbox behavior in a TestFlight or store-signed build.
 

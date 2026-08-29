@@ -59,7 +59,7 @@ Escape closes a viewer outside full screen. Mouse dragging or scrolling pans; tr
 
 `Release-Direct` uses ordinary read access and has no App Sandbox entitlement. `Release-AppStore` is sandboxed with user-selected read-only access and app-scoped bookmarks. The selected image opens immediately; adjacent navigation asks for its folder only when broader permission is needed. MP4 output is created through the user-selected `NSSavePanel` destination. The two channels have the same viewer/export feature code and are alternatives, not side-by-side editions.
 
-Local artifacts are ad hoc signed with Hardened Runtime for verification. Public Direct distribution still requires Developer ID signing, notarization, and stapling; App Store distribution still requires the correct distribution profile and store validation.
+Local artifacts default to ad hoc signing with Hardened Runtime for verification. The GitHub v1.0.0 Direct arm64 and x86_64 DMGs, together with the applications they contain, are signed with Developer ID, notarized by Apple, and carry stapled tickets. App Store distribution still requires the correct distribution profile and store validation.
 
 ## Build and test
 
@@ -75,7 +75,9 @@ xcodebuild -project LightView.xcodeproj -scheme LightView -configuration Debug t
   -only-testing:LightViewTests CODE_SIGNING_ALLOWED=NO
 ```
 
-The build script compiles the x86_64/10.15 and arm64/11.0 slices separately, verifies identical resource payloads, merges compatible Mach-O files, signs nested code and the application, and validates the result. See [release-checklist.md](docs/release-checklist.md) for outstanding UI-automation, sanitizer, signing, notarization, and old-system gates.
+For a Developer ID build, set `LIGHTVIEW_CODE_SIGN_IDENTITY` to the full certificate name. The build script then requests a secure timestamp automatically; ad hoc builds continue to use no timestamp.
+
+The build script compiles the x86_64/10.15 and arm64/11.0 slices separately, verifies identical resource payloads, merges compatible Mach-O files, signs nested code and the application, and validates the result. See [release-checklist.md](docs/release-checklist.md) for outstanding UI-automation, sanitizer, App Store signing, and old-system gates.
 
 ## Measured resource use
 
