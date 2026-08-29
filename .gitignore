@@ -15,3 +15,6 @@ qView/
 .DS_Store
 xcuserdata/
 *.xcuserstate
+
+# Local Apple notarization credentials
+.env.notary

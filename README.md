@@ -89,6 +89,17 @@ The release script builds separate Intel and Apple silicon DMGs, signs and notar
 
 It reads the version from `Resources/Info.plist` and refuses a mismatched argument, dirty working tree, or existing tag. No credentials are stored in the repository. By default it uses the `LightView-Notary` notarytool Keychain profile and the first valid Developer ID Application identity. These can be overridden locally:
 
+Create or restore the local notarization profile without putting the App-specific password on the command line:
+
+```bash
+cp .env.notary.example .env.notary
+chmod 600 .env.notary
+# Fill LIGHTVIEW_APP_SPECIFIC_PASSWORD in .env.notary, then run:
+./scripts/setup-notary-profile.sh
+```
+
+`.env.notary` is ignored by Git. The setup script passes its password to the system credential prompt through a private pipe, stores the resulting profile in the login Keychain, clears the shell variable, and validates the profile with `notarytool history`.
+
 ```bash
 LIGHTVIEW_NOTARY_PROFILE=LightView-Notary \
 LIGHTVIEW_CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
