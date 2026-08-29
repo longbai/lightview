@@ -79,6 +79,23 @@ For a Developer ID build, set `LIGHTVIEW_CODE_SIGN_IDENTITY` to the full certifi
 
 The build script compiles the x86_64/10.15 and arm64/11.0 slices separately, verifies identical resource payloads, merges compatible Mach-O files, signs nested code and the application, and validates the result. See [release-checklist.md](docs/release-checklist.md) for outstanding UI-automation, sanitizer, App Store signing, and old-system gates.
 
+## GitHub release
+
+The release script builds separate Intel and Apple silicon DMGs, signs and notarizes both applications and disk images, creates the version tag, and publishes the assets through GitHub CLI. GitHub generates the source ZIP and TAR.GZ automatically from that tag.
+
+```bash
+./scripts/release-github.sh 1.0.1
+```
+
+It reads the version from `Resources/Info.plist` and refuses a mismatched argument, dirty working tree, or existing tag. No credentials are stored in the repository. By default it uses the `LightView` notarytool Keychain profile and the first valid Developer ID Application identity. These can be overridden locally:
+
+```bash
+LIGHTVIEW_NOTARY_PROFILE=LightView \
+LIGHTVIEW_CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+LIGHTVIEW_GITHUB_REPOSITORY=longbai/lightview \
+./scripts/release-github.sh 1.0.1
+```
+
 ## Measured resource use
 
 On an Apple M1 MacBook Pro with 16 GB RAM and macOS 26.6.2, all four applications opened the same 2,153,248-byte 12000×8000 JPEG in three alternating cold-start rounds. Each round settled for five seconds and recorded five main-process RSS samples. Descendant-process RSS was zero in this accepted corpus.
