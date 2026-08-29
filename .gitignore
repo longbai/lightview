@@ -1,2 +1,17 @@
 .worktrees/
 build/
+
+# Local agent and implementation-planning state
+.agents/
+.codex/
+docs/superpowers/
+
+# Locally cloned comparison applications
+SimpView/
+Tovi/
+qView/
+
+# macOS and Xcode user state
+.DS_Store
+xcuserdata/
+*.xcuserstate
