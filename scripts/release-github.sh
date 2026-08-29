@@ -42,7 +42,8 @@ if [[ "$current_branch" != "main" ]]; then
 fi
 
 git fetch origin main
-if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
+remote_main="$(git rev-parse FETCH_HEAD)"
+if [[ "$(git rev-parse HEAD)" != "$remote_main" ]]; then
     echo "Local main must exactly match origin/main before publishing." >&2
     exit 4
 fi
