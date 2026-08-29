@@ -9,6 +9,8 @@
 "menu.noRecent" = "没有最近项目";
 "menu.minimize" = "最小化";
 "menu.guide" = "LightView 键盘与手势";
+"menu.showViewerToolbar" = "显示底部工具条";
+"menu.hideViewerToolbar" = "隐藏底部工具条";
 "folderAccess.title" = "允许访问文件夹";
 "folderAccess.message" = "请选择此文件夹或它的上级文件夹，以浏览附近的图片。";
 "folderAccess.allow" = "允许访问";

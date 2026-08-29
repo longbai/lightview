@@ -6,7 +6,14 @@ script_directory="$(cd "$(dirname "$0")" && pwd)"
 project_directory="$(cd "$script_directory/.." && pwd)"
 source_directory="$project_directory/Vendor/libwebp/upstream"
 
-if ! command -v cmake >/dev/null 2>&1; then
+cmake_executable="$(command -v cmake || true)"
+if [[ -z "$cmake_executable" && -x /opt/homebrew/bin/cmake ]]; then
+    cmake_executable="/opt/homebrew/bin/cmake"
+elif [[ -z "$cmake_executable" && -x /usr/local/bin/cmake ]]; then
+    cmake_executable="/usr/local/bin/cmake"
+fi
+
+if [[ -z "$cmake_executable" ]]; then
     echo "LightView requires CMake to build the pinned libwebp decoder." >&2
     exit 1
 fi
@@ -21,7 +28,7 @@ build_architecture() {
     local deployment_target="$2"
     local output_directory="$project_directory/build/vendor/$architecture"
 
-    cmake -S "$source_directory" -B "$output_directory" \
+    "$cmake_executable" -S "$source_directory" -B "$output_directory" \
         -DCMAKE_BUILD_TYPE=MinSizeRel \
         -DCMAKE_OSX_ARCHITECTURES="$architecture" \
         -DCMAKE_OSX_DEPLOYMENT_TARGET="$deployment_target" \
@@ -42,7 +49,7 @@ build_architecture() {
         -DWEBP_BUILD_FUZZTEST=OFF \
         -DWEBP_ENABLE_SIMD=ON
 
-    cmake --build "$output_directory" --config MinSizeRel \
+    "$cmake_executable" --build "$output_directory" --config MinSizeRel \
         --target webpdecoder webpdemux --parallel 8
 
     test -f "$output_directory/libwebpdecoder.a"

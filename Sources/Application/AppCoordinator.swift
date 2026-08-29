@@ -69,6 +69,12 @@ final class AppCoordinator: NSObject {
 
     @objc func newWindow(_ sender: Any?) { openEmptyWindow() }
 
+    @objc func toggleViewerToolbar(_ sender: NSMenuItem) {
+        preferences.showsViewerToolbar.toggle()
+        windowControllers.forEach { $0.applyPreferences() }
+        updateViewerToolbarMenuItem(sender)
+    }
+
     @objc func showOpenPanel(_ sender: Any?) {
         let presentingController = windowControllers.first(where: { $0.window?.isKeyWindow == true })
         let restoresSlideshow = presentingController?.suspendSlideshowForModalPanel() == true
@@ -177,6 +183,13 @@ final class AppCoordinator: NSObject {
         add(.fill, to: viewMenu, action: #selector(ViewerWindowController.fillWindow(_:)))
         add(.actualSize, to: viewMenu, action: #selector(ViewerWindowController.actualSize(_:)))
         add(.toggleEXIFOverlay, to: viewMenu, action: #selector(ViewerWindowController.toggleEXIFOverlay(_:)))
+        let viewerToolbarItem = add(
+            .toggleViewerToolbar,
+            to: viewMenu,
+            action: #selector(toggleViewerToolbar(_:)),
+            target: self
+        )
+        updateViewerToolbarMenuItem(viewerToolbarItem)
         viewMenu.addItem(.separator())
         add(.rotateLeft, to: viewMenu, action: #selector(ViewerWindowController.rotateLeft(_:)))
         add(.rotateRight, to: viewMenu, action: #selector(ViewerWindowController.rotateRight(_:)))
@@ -224,12 +237,26 @@ final class AppCoordinator: NSObject {
         main.addItem(item)
     }
 
-    private func add(_ identifier: CommandIdentifier, to menu: NSMenu, action: Selector, target: AnyObject? = nil) {
+    @discardableResult
+    private func add(
+        _ identifier: CommandIdentifier,
+        to menu: NSMenu,
+        action: Selector,
+        target: AnyObject? = nil
+    ) -> NSMenuItem {
         let definition = CommandCatalog.definition(for: identifier)
         let item = NSMenuItem(title: definition.title, action: action, keyEquivalent: definition.keyEquivalent)
         item.keyEquivalentModifierMask = definition.modifiers.appKitFlags
         item.target = target
         menu.addItem(item)
+        return item
+    }
+
+    private func updateViewerToolbarMenuItem(_ item: NSMenuItem) {
+        item.title = L10n.text(
+            preferences.showsViewerToolbar ? "menu.hideViewerToolbar" : "menu.showViewerToolbar"
+        )
+        item.state = preferences.showsViewerToolbar ? .on : .off
     }
 
     private func showInformation(_ model: ImageInformationModel) {

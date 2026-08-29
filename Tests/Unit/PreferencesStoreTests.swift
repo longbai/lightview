@@ -23,6 +23,15 @@ final class PreferencesStoreTests: XCTestCase {
         XCTAssertEqual(store.preloadLevel, .one)
     }
 
+    func testViewerToolbarIsShownByDefaultAndPersistsChanges() {
+        let defaults = makeDefaults()
+        let store = PreferencesStore(defaults: defaults)
+
+        XCTAssertTrue(store.showsViewerToolbar)
+        store.showsViewerToolbar = false
+        XCTAssertFalse(PreferencesStore(defaults: defaults).showsViewerToolbar)
+    }
+
     private func makeDefaults() -> UserDefaults {
         let suiteName = "LightViewPreferencesTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!

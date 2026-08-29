@@ -35,6 +35,7 @@ public final class PreferencesStore {
         case zoomStep = "viewer.zoomStep"
         case initialZoomMode = "viewer.initialZoomMode"
         case showsWelcomeGuide = "interface.showsWelcomeGuide"
+        case showsViewerToolbar = "interface.showsViewerToolbar"
         case appearance = "interface.appearance"
         case viewerBackground = "viewer.background"
         case customBackgroundColorHex = "viewer.customBackgroundColorHex"
@@ -107,6 +108,14 @@ public final class PreferencesStore {
             return defaults.bool(forKey: Key.showsWelcomeGuide.rawValue)
         }
         set { defaults.set(newValue, forKey: Key.showsWelcomeGuide.rawValue) }
+    }
+
+    public var showsViewerToolbar: Bool {
+        get {
+            guard defaults.object(forKey: Key.showsViewerToolbar.rawValue) != nil else { return true }
+            return defaults.bool(forKey: Key.showsViewerToolbar.rawValue)
+        }
+        set { defaults.set(newValue, forKey: Key.showsViewerToolbar.rawValue) }
     }
 
     public var appearance: AppearancePreference {

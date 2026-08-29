@@ -9,6 +9,8 @@
 "menu.noRecent" = "No Recent Items";
 "menu.minimize" = "Minimize";
 "menu.guide" = "LightView Keyboard & Gestures";
+"menu.showViewerToolbar" = "Show Bottom Toolbar";
+"menu.hideViewerToolbar" = "Hide Bottom Toolbar";
 "folderAccess.title" = "Allow Folder Access";
 "folderAccess.message" = "Choose this folder or one of its parent folders to browse nearby images.";
 "folderAccess.allow" = "Allow Access";

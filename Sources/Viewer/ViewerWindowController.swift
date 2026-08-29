@@ -9,6 +9,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private let canvas = ImageCanvasView()
     private let welcome = WelcomeViewController()
     private let container = DropContainerView()
+    private lazy var viewerToolbar = ViewerToolbarView(target: self)
     private let onOpenPanelRequest: () -> Void
     private let systemIntegration: SystemIntegration
     private let folderAccessProvider: any FolderAccessProvider
@@ -377,6 +378,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             stopAnimation()
             canvas.setEXIFOverlay(rows: nil)
             window?.title = "Loading \(url.lastPathComponent)…"
+            viewerToolbar.refreshAvailability(using: self)
         case .presenting(_, let asset, _):
             stopAnimation()
             resizeWindowIfNeeded(for: asset)
@@ -415,6 +417,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private func updatePresentationChrome() {
         guard let url = session.currentURL, let asset = session.currentAsset else {
             canvas.setEXIFOverlay(rows: nil)
+            viewerToolbar.refreshAvailability(using: self)
             return
         }
         let catalog = session.catalog
@@ -431,6 +434,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             rotationDegrees: canvas.viewportState.rotationDegrees
         )
         canvas.setEXIFOverlay(rows: exifOverlayRequested ? currentEXIFRows : nil)
+        viewerToolbar.refreshAvailability(using: self)
     }
 
     private func loadCurrentImageAtFullResolution() {
@@ -468,6 +472,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         canvas.viewerBackgroundColor = preferences.viewerBackground.color(
             customHex: preferences.customBackgroundColorHex
         )
+        viewerToolbar.isHidden = !preferences.showsViewerToolbar
     }
 
     func setBackgroundAsset(_ asset: RasterAsset?) {
@@ -655,7 +660,10 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     }
 
     private func embed(_ view: NSView) {
-        if container.subviews.first === view { return }
+        if container.subviews.first === view {
+            viewerToolbar.refreshAvailability(using: self)
+            return
+        }
         container.subviews.forEach { $0.removeFromSuperview() }
         view.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(view)
@@ -665,6 +673,15 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             view.topAnchor.constraint(equalTo: container.topAnchor),
             view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
         ])
+        guard view === canvas else { return }
+        viewerToolbar.translatesAutoresizingMaskIntoConstraints = false
+        viewerToolbar.isHidden = !preferences.showsViewerToolbar
+        container.addSubview(viewerToolbar)
+        NSLayoutConstraint.activate([
+            viewerToolbar.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            viewerToolbar.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -16),
+        ])
+        viewerToolbar.refreshAvailability(using: self)
     }
 }
 

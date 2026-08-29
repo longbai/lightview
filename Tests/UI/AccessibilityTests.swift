@@ -43,6 +43,27 @@ final class AccessibilityTests: XCTestCase {
     }
 
     @MainActor
+    func testViewerToolbarControlsHaveAccessibilityLabels() {
+        let fixture = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/Static/alpha.png")
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-ApplePersistenceIgnoreState", "YES",
+            "-LightViewUITestOpenPath", fixture.path,
+        ]
+        app.launch()
+
+        for identifier in [
+            "previous", "next", "zoomOut", "zoomIn", "fit", "actualSize",
+            "rotateLeft", "rotateRight", "flipHorizontal", "information", "toggleFullScreen",
+        ] {
+            assertLabeled(app.buttons["viewer.toolbar.\(identifier)"])
+        }
+    }
+
+    @MainActor
     private func assertLabeled(_ element: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(element.waitForExistence(timeout: 3), file: file, line: line)
         XCTAssertFalse(element.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, file: file, line: line)

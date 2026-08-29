@@ -25,4 +25,17 @@ final class CommandCatalogTests: XCTestCase {
         XCTAssertEqual(shortcuts[.toggleEXIFOverlay], "E")
         XCTAssertEqual(shortcuts[.exportMP4], "⌘E")
     }
+
+    func testViewerToolbarContainsUniqueSupportedCommandsInDisplayOrder() {
+        XCTAssertEqual(ViewerToolbarCatalog.groups, [
+            [.previous, .next],
+            [.zoomOut, .zoomIn, .fit, .actualSize],
+            [.rotateLeft, .rotateRight, .flipHorizontal],
+            [.information, .toggleFullScreen],
+        ])
+        XCTAssertEqual(Set(ViewerToolbarCatalog.all).count, ViewerToolbarCatalog.all.count)
+        XCTAssertTrue(ViewerToolbarCatalog.all.allSatisfy { command in
+            CommandCatalog.all.contains(where: { $0.identifier == command })
+        })
+    }
 }

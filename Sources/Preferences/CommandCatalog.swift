@@ -13,6 +13,7 @@ public enum CommandIdentifier: String, CaseIterable, Hashable, Sendable {
     case fit
     case fill
     case actualSize
+    case toggleViewerToolbar
     case toggleEXIFOverlay
     case rotateLeft
     case rotateRight
@@ -84,6 +85,7 @@ public enum CommandCatalog {
         .init(identifier: .fit, title: "Fit to Window", keyEquivalent: "f", shortcutDescription: "F"),
         .init(identifier: .fill, title: "Fill Window", keyEquivalent: "f", modifiers: .shift, shortcutDescription: "⇧F"),
         .init(identifier: .actualSize, title: "Actual Size", keyEquivalent: "1", shortcutDescription: "1"),
+        .init(identifier: .toggleViewerToolbar, title: "Show Bottom Toolbar", keyEquivalent: "", shortcutDescription: ""),
         .init(identifier: .toggleEXIFOverlay, title: "Show EXIF Overlay", keyEquivalent: "e", shortcutDescription: "E"),
         .init(identifier: .rotateLeft, title: "Rotate Left", keyEquivalent: "\u{F702}", modifiers: .shift, shortcutDescription: "⇧←"),
         .init(identifier: .rotateRight, title: "Rotate Right", keyEquivalent: "\u{F703}", modifiers: .shift, shortcutDescription: "⇧→"),
@@ -109,4 +111,15 @@ public enum CommandCatalog {
     public static func definition(for identifier: CommandIdentifier) -> CommandDefinition {
         all.first(where: { $0.identifier == identifier })!
     }
+}
+
+public enum ViewerToolbarCatalog {
+    public static let groups: [[CommandIdentifier]] = [
+        [.previous, .next],
+        [.zoomOut, .zoomIn, .fit, .actualSize],
+        [.rotateLeft, .rotateRight, .flipHorizontal],
+        [.information, .toggleFullScreen],
+    ]
+
+    public static let all = groups.flatMap { $0 }
 }
