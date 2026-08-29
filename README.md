@@ -96,6 +96,23 @@ LIGHTVIEW_GITHUB_REPOSITORY=longbai/lightview \
 ./scripts/release-github.sh 1.0.1
 ```
 
+For Mac App Store distribution, archive with the `Release-AppStore` configuration and upload using the checked-in export options. Xcode Automatic Signing supplies the App Store distribution identity and profile from the configured developer account; no credentials are stored in the project.
+
+```bash
+xcodebuild -project LightView.xcodeproj -scheme LightView \
+  -configuration Release-AppStore \
+  -archivePath build/app-store/LightView.xcarchive \
+  -destination 'generic/platform=macOS' \
+  CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=9EZX6J8NSC \
+  CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES \
+  -allowProvisioningUpdates archive
+
+xcodebuild -exportArchive \
+  -archivePath build/app-store/LightView.xcarchive \
+  -exportOptionsPlist Config/AppStoreExportOptions.plist \
+  -allowProvisioningUpdates
+```
+
 ## Measured resource use
 
 On an Apple M1 MacBook Pro with 16 GB RAM and macOS 26.6.2, all four applications opened the same 2,153,248-byte 12000×8000 JPEG in three alternating cold-start rounds. Each round settled for five seconds and recorded five main-process RSS samples. Descendant-process RSS was zero in this accepted corpus.
