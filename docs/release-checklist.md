@@ -7,7 +7,7 @@
 - [x] x86_64 declares macOS 10.15; arm64 declares macOS 11.0.
 - [x] No SwiftUI or WebKit linkage is present.
 - [x] Direct has no App Sandbox entitlement.
-- [x] App Store has only App Sandbox, user-selected read-only files, and app-scoped bookmarks; it has no network entitlement.
+- [x] App Store has only App Sandbox, user-selected read/write files, and app-scoped bookmarks; it has no network entitlement. Write access is required only for the explicit MP4 save destination.
 - [x] Both local ad hoc artifacts carry Hardened Runtime and pass strict code-signature verification.
 - [x] Both configurations pass current-system startup smoke.
 - [x] English and Simplified Chinese localization keys match.

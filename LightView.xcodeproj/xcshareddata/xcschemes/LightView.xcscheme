@@ -34,5 +34,5 @@
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction buildConfiguration="Debug"/>
-   <ArchiveAction buildConfiguration="Release-Direct" revealArchiveInOrganizer="YES"/>
+   <ArchiveAction buildConfiguration="Release-AppStore" revealArchiveInOrganizer="YES"/>
 </Scheme>

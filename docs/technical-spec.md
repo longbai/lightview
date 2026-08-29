@@ -132,7 +132,7 @@ protocol FolderAccessProvider {
 - Balances every successful `startAccessingSecurityScopedResource()` with exactly one stop call owned by the lease.
 - Refreshes stale bookmarks and removes invalid ones.
 
-The App Store entitlement permits user-selected read-only source access. `NSSavePanel` grants the application access to the explicit MP4 destination selected by the user, so no general read/write source entitlement is needed.
+The App Store entitlement permits user-selected read/write access. Source images remain logically read-only because LightView implements no rename, delete, overwrite, or other source mutation. The write scope is required so `NSSavePanel` can grant access to the explicit MP4 destination selected by the user.
 
 ### 3.5 Format detection and decode routing
 

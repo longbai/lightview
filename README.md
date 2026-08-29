@@ -57,7 +57,7 @@ Escape closes a viewer outside full screen. Mouse dragging or scrolling pans; tr
 
 ## Direct and App Store behavior
 
-`Release-Direct` uses ordinary read access and has no App Sandbox entitlement. `Release-AppStore` is sandboxed with user-selected read-only access and app-scoped bookmarks. The selected image opens immediately; adjacent navigation asks for its folder only when broader permission is needed. MP4 output is created through the user-selected `NSSavePanel` destination. The two channels have the same viewer/export feature code and are alternatives, not side-by-side editions.
+`Release-Direct` uses ordinary file access and has no App Sandbox entitlement. `Release-AppStore` is sandboxed with user-selected read/write access and app-scoped bookmarks. The application does not provide destructive source-file operations; write access is used for the explicit MP4 destination selected through `NSSavePanel`. The selected image opens immediately, while adjacent navigation asks for its folder only when broader permission is needed. The two channels have the same viewer/export feature code and are alternatives, not side-by-side editions.
 
 Local artifacts default to ad hoc signing with Hardened Runtime for verification. The GitHub v1.0.0 Direct arm64 and x86_64 DMGs, together with the applications they contain, are signed with Developer ID, notarized by Apple, and carry stapled tickets. App Store distribution still requires the correct distribution profile and store validation.
 
