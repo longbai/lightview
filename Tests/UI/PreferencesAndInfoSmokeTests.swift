@@ -36,5 +36,16 @@ final class PreferencesAndInfoSmokeTests: XCTestCase {
         XCTAssertTrue(app.windows["information.window"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts[fixtureURL.lastPathComponent].exists)
         XCTAssertTrue(app.staticTexts["information.avifRequirement"].exists)
+
+        let informationWindow = app.windows["information.window"]
+        app.typeKey("i", modifierFlags: .command)
+        XCTAssertTrue(informationWindow.waitForNonExistence(timeout: 3))
+
+        app.typeKey("i", modifierFlags: .command)
+        XCTAssertTrue(informationWindow.waitForExistence(timeout: 3))
+        let informationButton = app.buttons["viewer.toolbar.information"]
+        XCTAssertTrue(informationButton.exists)
+        informationButton.click()
+        XCTAssertTrue(informationWindow.waitForNonExistence(timeout: 3))
     }
 }

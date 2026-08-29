@@ -20,13 +20,17 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
     private let cache: RasterCache
     private let animationCache = AnimationAssetCache(countLimit: 4)
     private let decodeQueue: OperationQueue
+    private let preloadQueue: OperationQueue
     private let callbackQueue: DispatchQueue
+    private let preloadLock = NSLock()
+    private var preloadTasks: [(cancellation: DecodeCancellation, operation: Operation)] = []
 
     public init(
         decoder: (any ImageDecoding)? = nil,
         animationDecoder: (any AnimationAssetDecoding)? = AnimationDecoderRouter(),
         cache: RasterCache = RasterCache(byteLimit: 256 * 1_024 * 1_024),
         decodeQueue: OperationQueue? = nil,
+        preloadQueue: OperationQueue? = nil,
         callbackQueue: DispatchQueue = .main,
         nativeFormatPolicy: NativeFormatPolicy = NativeFormatPolicy(),
         operatingSystemVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
@@ -47,6 +51,15 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
             queue.maxConcurrentOperationCount = 2
             self.decodeQueue = queue
         }
+        if let preloadQueue {
+            self.preloadQueue = preloadQueue
+        } else {
+            let queue = OperationQueue()
+            queue.name = "app.lightview.image-preload"
+            queue.qualityOfService = .utility
+            queue.maxConcurrentOperationCount = 1
+            self.preloadQueue = queue
+        }
     }
 
     @discardableResult
@@ -54,6 +67,7 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
         _ request: DecodeRequest,
         completion: @escaping @Sendable (Result<DisplayAsset, ImageLoadError>) -> Void
     ) -> DecodeCancellation {
+        cancelPreloads()
         let cancellation = DecodeCancellation()
         let key = RasterCacheKey(
             sourceURL: request.url,
@@ -75,7 +89,7 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
             return cancellation
         }
 
-        decodeQueue.addOperation { [decoder, animationDecoder, cache, animationCache, callbackQueue] in
+        let operation = BlockOperation { [decoder, animationDecoder, cache, animationCache, callbackQueue] in
             let result: Result<DisplayAsset, ImageLoadError>
             do {
                 try cancellation.throwIfCancelled()
@@ -100,18 +114,70 @@ public final class ImageLoadPipeline: ImageLoading, @unchecked Sendable {
                 completion(result)
             }
         }
+        operation.queuePriority = .veryHigh
+        decodeQueue.addOperation(operation)
         return cancellation
     }
 
     public func preload(_ requests: [DecodeRequest]) {
+        cancelPreloads()
+        var seen: Set<RasterCacheKey> = []
+        var tasks: [(cancellation: DecodeCancellation, operation: Operation)] = []
         for request in requests.prefix(4) {
-            _ = load(request) { _ in }
+            let key = RasterCacheKey(
+                sourceURL: request.url,
+                targetPixelSize: request.targetPixelSize,
+                requiresFullResolution: request.requiresFullResolution
+            )
+            guard seen.insert(key).inserted,
+                  cache.value(for: key) == nil,
+                  animationCache.value(for: request.url) == nil else { continue }
+            let cancellation = DecodeCancellation()
+            let operation = BlockOperation { [decoder, animationDecoder, cache, animationCache] in
+                do {
+                    try cancellation.throwIfCancelled()
+                    if let animation = try animationDecoder?.decodeIfPresent(
+                        url: request.url,
+                        cancellation: cancellation
+                    ) {
+                        try cancellation.throwIfCancelled()
+                        animationCache.insert(animation, for: request.url)
+                    } else {
+                        let asset = try decoder.decode(request, cancellation: cancellation)
+                        try cancellation.throwIfCancelled()
+                        cache.insert(asset, for: key)
+                    }
+                } catch {
+                    // Preloading is opportunistic. Foreground loads report their own failures.
+                }
+            }
+            operation.queuePriority = .veryLow
+            tasks.append((cancellation, operation))
+        }
+        preloadLock.withLock {
+            preloadTasks = tasks
+        }
+        for task in tasks {
+            preloadQueue.addOperation(task.operation)
         }
     }
 
     public func handleMemoryPressure() {
+        cancelPreloads()
         cache.removeAllNonessential()
         animationCache.removeAll()
+    }
+
+    private func cancelPreloads() {
+        let tasks = preloadLock.withLock { () -> [(DecodeCancellation, Operation)] in
+            let tasks = preloadTasks
+            preloadTasks.removeAll(keepingCapacity: false)
+            return tasks
+        }
+        for task in tasks {
+            task.0.cancel()
+            task.1.cancel()
+        }
     }
 }
 

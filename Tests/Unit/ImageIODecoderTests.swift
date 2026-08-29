@@ -4,6 +4,23 @@ import XCTest
 @testable import LightViewCore
 
 final class ImageIODecoderTests: XCTestCase {
+    func testEstimatedDecodeCostUsesRequestedThumbnailSize() throws {
+        let cost = try ImageIODecoder.estimatedDecodedByteCost(
+            rawPixelSize: CGSize(width: 40_000, height: 20_000),
+            maximumPixelSize: 2_000
+        )
+        XCTAssertEqual(cost, 2_000 * 1_000 * 4)
+    }
+
+    func testEstimatedFullResolutionCostCanBeRejectedBeforeAllocation() throws {
+        let limits = DecodeSafetyLimits(maxDecodedBytes: 512 * 1_024 * 1_024)
+        let cost = try ImageIODecoder.estimatedDecodedByteCost(
+            rawPixelSize: CGSize(width: 40_000, height: 20_000),
+            maximumPixelSize: 40_000
+        )
+        XCTAssertThrowsError(try limits.validateDecodedByteCount(cost))
+    }
+
     func testOrientationIsAppliedAndPreviewIsDownsampled() throws {
         let url = fixtureURL("oriented-6.jpg")
         let decoder = ImageIODecoder()

@@ -3,11 +3,11 @@ import LightViewCore
 
 @MainActor
 final class ImageCanvasView: NSView {
-    var onFullResolutionRequest: (() -> Void)?
+    var onHigherResolutionRequest: ((CGSize) -> Void)?
     var onPresentationChange: (() -> Void)?
     var asset: RasterAsset? {
         didSet {
-            hasRequestedFullResolution = false
+            hasRequestedHigherResolution = false
             animationImage = nil
             animationPixelSize = nil
             needsDisplay = true
@@ -32,7 +32,7 @@ final class ImageCanvasView: NSView {
     private var translationAtDragStart = CGPoint.zero
     private var animationImage: CGImage?
     private var animationPixelSize: CGSize?
-    private var hasRequestedFullResolution = false
+    private var hasRequestedHigherResolution = false
     private let exifOverlay = EXIFOverlayView()
 
     override init(frame frameRect: NSRect) {
@@ -232,7 +232,7 @@ final class ImageCanvasView: NSView {
     }
 
     private func requestHigherResolutionIfNeeded() {
-        guard !hasRequestedFullResolution, let asset,
+        guard !hasRequestedHigherResolution, let asset,
               let scale = presentationScale(for: asset.originalPixelSize),
               ViewportGeometry.requiresHigherResolution(
                   originalPixelSize: asset.originalPixelSize,
@@ -240,8 +240,16 @@ final class ImageCanvasView: NSView {
                   presentationScale: scale,
                   backingScale: window?.backingScaleFactor ?? 1
               ) else { return }
-        hasRequestedFullResolution = true
-        onFullResolutionRequest?()
+        let backingScale = window?.backingScaleFactor ?? 1
+        let requiredScale = max(0, scale * backingScale)
+        let targetPixelSize = CGSize(
+            width: min(asset.originalPixelSize.width, ceil(asset.originalPixelSize.width * requiredScale)),
+            height: min(asset.originalPixelSize.height, ceil(asset.originalPixelSize.height * requiredScale))
+        )
+        guard targetPixelSize.width > asset.decodedPixelSize.width * 1.05
+                || targetPixelSize.height > asset.decodedPixelSize.height * 1.05 else { return }
+        hasRequestedHigherResolution = true
+        onHigherResolutionRequest?(targetPixelSize)
     }
 }
 

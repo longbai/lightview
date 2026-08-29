@@ -72,6 +72,56 @@ final class ViewingSessionTests: XCTestCase {
         viewport.rotationDegrees = 90
         XCTAssertEqual(viewport.rotationDegrees, 90)
     }
+
+    @MainActor
+    func testResolutionRefinementKeepsCurrentImageVisibleAndUsesRequestedSize() async throws {
+        let loader = ControlledImageLoader()
+        let session = ViewingSession(loader: loader)
+        let url = URL(fileURLWithPath: "/tmp/large.png")
+        session.open(url, targetPixelSize: CGSize(width: 1_280, height: 800))
+        loader.complete(generation: session.generation, with: .success(try makeSessionAsset(cost: 8)))
+        await Task.yield()
+
+        var publishedLoading = false
+        session.onStateChange = { state in
+            if case .loading = state { publishedLoading = true }
+        }
+        session.refineCurrentRaster(at: url, targetPixelSize: CGSize(width: 2_560, height: 1_600))
+
+        XCTAssertFalse(publishedLoading)
+        XCTAssertNotNil(session.currentAsset)
+        XCTAssertEqual(loader.lastRequest?.targetPixelSize, CGSize(width: 2_560, height: 1_600))
+        XCTAssertEqual(loader.lastRequest?.requiresFullResolution, false)
+    }
+
+    @MainActor
+    func testFailedResolutionRefinementFallsBackToCurrentImage() async throws {
+        let loader = ControlledImageLoader()
+        let session = ViewingSession(loader: loader)
+        let url = URL(fileURLWithPath: "/tmp/large.png")
+        session.open(url)
+        loader.complete(generation: session.generation, with: .success(try makeSessionAsset(cost: 8)))
+        await Task.yield()
+
+        var presentationCount = 0
+        session.onStateChange = { state in
+            if case .presenting = state { presentationCount += 1 }
+        }
+        session.refineCurrentRaster(at: url, targetPixelSize: CGSize(width: 4_000, height: 3_000))
+        loader.complete(
+            generation: session.generation,
+            with: .failure(.decodedImageTooLarge(required: 1_000, limit: 500))
+        )
+        await Task.yield()
+
+        XCTAssertEqual(presentationCount, 0)
+        XCTAssertNotNil(session.currentAsset)
+        if case .presenting = session.state {
+            // Expected: the lower-resolution image remains usable.
+        } else {
+            XCTFail("Expected the prior image to remain presented")
+        }
+    }
 }
 
 private final class ControlledImageLoader: ImageLoading, @unchecked Sendable {

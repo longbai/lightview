@@ -53,6 +53,13 @@ public struct ImageIODecoder: ImageDecoding {
             throw ImageLoadError.decodeFailed("Invalid target pixel size")
         }
 
+        let estimatedByteCost = try Self.estimatedDecodedByteCost(
+            rawPixelSize: inspection.rawPixelSize,
+            maximumPixelSize: maximumPixelSize
+        )
+        try limits.validateDecodedByteCount(estimatedByteCost)
+        try cancellation.throwIfCancelled()
+
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
@@ -96,6 +103,21 @@ public struct ImageIODecoder: ImageDecoding {
             throw ImageLoadError.decodeFailed("Decoded image byte count overflow")
         }
         return bytes
+    }
+
+    static func estimatedDecodedByteCost(
+        rawPixelSize: CGSize,
+        maximumPixelSize: CGFloat
+    ) throws -> Int {
+        let sourceMaximum = max(rawPixelSize.width, rawPixelSize.height)
+        guard sourceMaximum.isFinite, sourceMaximum > 0,
+              maximumPixelSize.isFinite, maximumPixelSize > 0 else {
+            throw ImageLoadError.decodeFailed("Invalid decoded dimensions")
+        }
+        let decodeScale = min(1, maximumPixelSize / sourceMaximum)
+        let width = max(1, Int(ceil(rawPixelSize.width * decodeScale)))
+        let height = max(1, Int(ceil(rawPixelSize.height * decodeScale)))
+        return try decodedByteCost(width: width, height: height, bytesPerPixel: 4)
     }
 
     private func makeSource(url: URL) -> CGImageSource? {

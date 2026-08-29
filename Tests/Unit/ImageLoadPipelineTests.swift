@@ -129,6 +129,43 @@ final class ImageLoadPipelineTests: XCTestCase {
         wait(for: [loaded], timeout: 2)
         XCTAssertEqual(animationDecoder.decodeCount, 1)
     }
+
+    func testForegroundLoadDoesNotWaitBehindSuspendedPreloads() throws {
+        let decodeQueue = OperationQueue()
+        decodeQueue.maxConcurrentOperationCount = 1
+        let preloadQueue = OperationQueue()
+        preloadQueue.maxConcurrentOperationCount = 1
+        preloadQueue.isSuspended = true
+        let decoder = CountingDecoder(asset: try makeAsset(cost: 16))
+        let pipeline = ImageLoadPipeline(
+            decoder: decoder,
+            animationDecoder: nil,
+            decodeQueue: decodeQueue,
+            preloadQueue: preloadQueue
+        )
+        let preloadRequest = DecodeRequest(
+            url: URL(fileURLWithPath: "/tmp/preload.png"),
+            targetPixelSize: CGSize(width: 100, height: 100),
+            requiresFullResolution: false,
+            generation: 1
+        )
+        pipeline.preload([preloadRequest])
+
+        let foregroundLoaded = expectation(description: "foreground load")
+        let foregroundRequest = DecodeRequest(
+            url: URL(fileURLWithPath: "/tmp/foreground.png"),
+            targetPixelSize: CGSize(width: 100, height: 100),
+            requiresFullResolution: false,
+            generation: 2
+        )
+        _ = pipeline.load(foregroundRequest) { result in
+            if case .failure(let error) = result { XCTFail("Unexpected error: \(error)") }
+            foregroundLoaded.fulfill()
+        }
+
+        wait(for: [foregroundLoaded], timeout: 1)
+        preloadQueue.isSuspended = false
+    }
 }
 
 private final class CountingDecoder: ImageDecoding, @unchecked Sendable {

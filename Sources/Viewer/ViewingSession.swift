@@ -32,21 +32,51 @@ public final class ViewingSession: @unchecked Sendable {
         targetPixelSize: CGSize? = nil,
         requiresFullResolution: Bool = false
     ) {
+        startLoad(
+            url,
+            targetPixelSize: targetPixelSize ?? self.targetPixelSize,
+            requiresFullResolution: requiresFullResolution,
+            preservingCurrentAsset: false
+        )
+    }
+
+    public func refineCurrentRaster(at url: URL, targetPixelSize: CGSize) {
+        let normalizedURL = url.standardizedFileURL
+        guard normalizedURL == currentURL, case .raster = currentAsset else { return }
+        startLoad(
+            normalizedURL,
+            targetPixelSize: targetPixelSize,
+            requiresFullResolution: false,
+            preservingCurrentAsset: true
+        )
+    }
+
+    private func startLoad(
+        _ url: URL,
+        targetPixelSize: CGSize,
+        requiresFullResolution: Bool,
+        preservingCurrentAsset: Bool
+    ) {
         activeCancellation?.cancel()
         generation &+= 1
         let normalizedURL = url.standardizedFileURL
+        let fallbackAsset = preservingCurrentAsset ? currentAsset : nil
         currentURL = normalizedURL
-        currentAsset = nil
+        if !preservingCurrentAsset {
+            currentAsset = nil
+        }
         let request = DecodeRequest(
             url: normalizedURL,
-            targetPixelSize: targetPixelSize ?? self.targetPixelSize,
+            targetPixelSize: targetPixelSize,
             requiresFullResolution: requiresFullResolution,
             generation: generation
         )
-        publish(.loading(url: normalizedURL, generation: generation))
+        if !preservingCurrentAsset {
+            publish(.loading(url: normalizedURL, generation: generation))
+        }
         activeCancellation = loader.load(request) { [weak self] result in
             DispatchQueue.main.async { [weak self] in
-                self?.receive(result, for: request)
+                self?.receive(result, for: request, fallbackAsset: fallbackAsset)
             }
         }
     }
@@ -79,7 +109,8 @@ public final class ViewingSession: @unchecked Sendable {
 
     private func receive(
         _ result: Result<DisplayAsset, ImageLoadError>,
-        for request: DecodeRequest
+        for request: DecodeRequest,
+        fallbackAsset: DisplayAsset?
     ) {
         guard request.generation == generation, request.url == currentURL else { return }
         activeCancellation = nil
@@ -89,8 +120,17 @@ public final class ViewingSession: @unchecked Sendable {
             publish(.presenting(url: request.url, asset: asset, generation: generation))
             scheduleNeighborPreviews(around: request.url)
         case .failure(let error):
-            currentAsset = nil
-            publish(.failed(url: request.url, error: error, generation: generation))
+            if let fallbackAsset {
+                currentAsset = fallbackAsset
+                // The existing raster never left the screen while refinement was running.
+                // Update the session bookkeeping without presenting it again: publishing
+                // would reset the canvas refinement guard and immediately retry the same
+                // failed request forever.
+                state = .presenting(url: request.url, asset: fallbackAsset, generation: generation)
+            } else {
+                currentAsset = nil
+                publish(.failed(url: request.url, error: error, generation: generation))
+            }
         }
     }
 

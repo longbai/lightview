@@ -260,6 +260,10 @@ final class AppCoordinator: NSObject {
     }
 
     private func showInformation(_ model: ImageInformationModel) {
+        if informationWindowController?.window?.isVisible == true {
+            informationWindowController?.window?.orderOut(nil)
+            return
+        }
         if let informationWindowController {
             informationWindowController.update(model: model)
         } else {

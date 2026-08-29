@@ -4,7 +4,7 @@
 
 LightView is a lightweight, native image viewer for macOS, written in Swift with AppKit. It combines the focused viewing, folder navigation, animation, slideshow, image information, and MP4-export capabilities selected from qView and Tovi in a new codebase. It does not use SwiftUI, WebKit, Qt, Electron, or browser rendering.
 
-The current code is a release candidate, not a notarized public release. It builds and runs on the current Apple silicon test Mac; Intel Catalina and Apple silicon Big Sur remain explicit real-system release gates.
+The current Direct release is signed with Apple Developer ID and notarized for public distribution. It builds and runs on the current Apple silicon test Mac; Intel Catalina and Apple silicon Big Sur remain explicit real-system release gates.
 
 ## Highlights
 
@@ -59,7 +59,7 @@ Escape closes a viewer outside full screen. Mouse dragging or scrolling pans; tr
 
 `Release-Direct` uses ordinary file access and has no App Sandbox entitlement. `Release-AppStore` is sandboxed with user-selected read/write access and app-scoped bookmarks. The application does not provide destructive source-file operations; write access is used for the explicit MP4 destination selected through `NSSavePanel`. The selected image opens immediately, while adjacent navigation asks for its folder only when broader permission is needed. The two channels have the same viewer/export feature code and are alternatives, not side-by-side editions.
 
-Local artifacts default to ad hoc signing with Hardened Runtime for verification. The GitHub v1.0.0 Direct arm64 and x86_64 DMGs, together with the applications they contain, are signed with Developer ID, notarized by Apple, and carry stapled tickets. App Store distribution still requires the correct distribution profile and store validation.
+Local artifacts default to ad hoc signing with Hardened Runtime for verification. GitHub Direct arm64 and x86_64 DMGs, together with the applications they contain, are signed with Developer ID, notarized by Apple, and carry stapled tickets. App Store distribution still requires the correct distribution profile and store validation.
 
 ## Build and test
 
@@ -84,7 +84,7 @@ The build script compiles the x86_64/10.15 and arm64/11.0 slices separately, ver
 The release script builds separate Intel and Apple silicon DMGs, signs and notarizes both applications and disk images, creates the version tag, and publishes the assets through GitHub CLI. GitHub generates the source ZIP and TAR.GZ automatically from that tag.
 
 ```bash
-./scripts/release-github.sh 1.0.1
+./scripts/release-github.sh 1.0.3
 ```
 
 It reads the version from `Resources/Info.plist` and refuses a mismatched argument, dirty working tree, or existing tag. No credentials are stored in the repository. By default it uses the `LightView-Notary` notarytool Keychain profile and the first valid Developer ID Application identity. These can be overridden locally:
@@ -93,7 +93,7 @@ It reads the version from `Resources/Info.plist` and refuses a mismatched argume
 LIGHTVIEW_NOTARY_PROFILE=LightView-Notary \
 LIGHTVIEW_CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 LIGHTVIEW_GITHUB_REPOSITORY=longbai/lightview \
-./scripts/release-github.sh 1.0.1
+./scripts/release-github.sh 1.0.3
 ```
 
 For Mac App Store distribution, archive with the `Release-AppStore` configuration and upload using the checked-in export options. Xcode Automatic Signing supplies the App Store distribution identity and profile from the configured developer account; no credentials are stored in the project.

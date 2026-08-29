@@ -64,7 +64,9 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         window.setFrameAutosaveName("LightView.ViewerWindow")
         window.title = "LightView"
         container.onOpenURL = { [weak self] url in self?.open(url) }
-        canvas.onFullResolutionRequest = { [weak self] in self?.loadCurrentImageAtFullResolution() }
+        canvas.onHigherResolutionRequest = { [weak self] targetPixelSize in
+            self?.loadCurrentImage(at: targetPixelSize)
+        }
         canvas.onPresentationChange = { [weak self] in self?.updatePresentationChrome() }
         window.contentView = container
         welcome.onOpen = { [weak self] in self?.onOpenPanelRequest() }
@@ -437,10 +439,10 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         viewerToolbar.refreshAvailability(using: self)
     }
 
-    private func loadCurrentImageAtFullResolution() {
+    private func loadCurrentImage(at targetPixelSize: CGSize) {
         guard let url = session.currentURL,
               case .raster = session.currentAsset else { return }
-        session.open(url, targetPixelSize: decodeTargetSize, requiresFullResolution: true)
+        session.refineCurrentRaster(at: url, targetPixelSize: targetPixelSize)
     }
 
     private func resizeWindowIfNeeded(for asset: DisplayAsset) {
