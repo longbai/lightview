@@ -218,9 +218,9 @@ printf '%s\n' \
     "Native lightweight image viewer for macOS." \
     "" \
     "What's new:" \
-    "- Prevent large-image zoom, rotation, and folder navigation from becoming stuck on Loading." \
-    "- Decode large images progressively and keep foreground navigation responsive while previews load." \
-    "- Allow the Info button and Command-I shortcut to both show and hide Image Information." \
+    "- Remove MP4 export and its Command-E shortcut after quality review." \
+    "- Tighten the App Store edition to user-selected read-only file access." \
+    "- Keep LightView focused on fast viewing, navigation, transforms, metadata, animation, and slideshows." \
     "" \
     "Downloads:" \
     "- Apple Silicon: LightView-$version-macos-arm64.dmg" \

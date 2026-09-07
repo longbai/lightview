@@ -8,7 +8,8 @@ final class DistributionConfigurationTests: XCTestCase {
 
         XCTAssertNil(direct["com.apple.security.app-sandbox"])
         XCTAssertEqual(appStore["com.apple.security.app-sandbox"] as? Bool, true)
-        XCTAssertEqual(appStore["com.apple.security.files.user-selected.read-write"] as? Bool, true)
+        XCTAssertEqual(appStore["com.apple.security.files.user-selected.read-only"] as? Bool, true)
+        XCTAssertNil(appStore["com.apple.security.files.user-selected.read-write"])
         XCTAssertEqual(appStore["com.apple.security.files.bookmarks.app-scope"] as? Bool, true)
         for entitlements in [direct, appStore] {
             XCTAssertNil(entitlements["com.apple.security.network.client"])

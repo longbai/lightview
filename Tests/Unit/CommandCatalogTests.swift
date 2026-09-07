@@ -23,7 +23,6 @@ final class CommandCatalogTests: XCTestCase {
         XCTAssertEqual(shortcuts[.toggleSlideshow], "Return")
         XCTAssertEqual(shortcuts[.startReverseSlideshow], "⇧Return")
         XCTAssertEqual(shortcuts[.toggleEXIFOverlay], "E")
-        XCTAssertEqual(shortcuts[.exportMP4], "⌘E")
     }
 
     func testViewerToolbarContainsUniqueSupportedCommandsInDisplayOrder() {

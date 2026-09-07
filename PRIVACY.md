@@ -10,7 +10,7 @@ LightView does not collect, store, transmit, sell, or share personal data. It do
 
 ## File access
 
-LightView accesses only files and folders that you explicitly open or authorize through macOS. The App Store edition uses Apple's App Sandbox and security-scoped permissions. Image decoding, EXIF inspection, slideshows, and MP4 export are performed on the device.
+LightView accesses only files and folders that you explicitly open or authorize through macOS. The App Store edition uses Apple's App Sandbox and read-only security-scoped permissions. Image decoding, EXIF inspection, animation, and slideshows are performed on the device.
 
 ## Network access
 

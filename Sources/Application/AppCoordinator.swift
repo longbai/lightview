@@ -167,8 +167,6 @@ final class AppCoordinator: NSObject {
         add(.openWith, to: fileMenu, action: #selector(ViewerWindowController.openImageWith(_:)))
         add(.reload, to: fileMenu, action: #selector(ViewerWindowController.reloadImage(_:)))
         add(.revealInFinder, to: fileMenu, action: #selector(ViewerWindowController.revealImageInFinder(_:)))
-        fileMenu.addItem(.separator())
-        add(.exportMP4, to: fileMenu, action: #selector(ViewerWindowController.exportMP4(_:)))
         append(fileMenu, titled: "File", to: main)
 
         let viewMenu = NSMenu(title: "View")

@@ -24,7 +24,7 @@ For both an Intel Catalina machine and an Apple silicon Big Sur machine:
 1. Copy the exact hashed Direct artifact without rebuilding it.
 2. Confirm native architecture with Activity Monitor or `ps -o arch`.
 3. Open JPEG/PNG, SVG, static WebP, animated GIF/WebP, and a folder; navigate both directions.
-4. Export a short 480p H.264 MP4 and inspect duration/dimensions with AVFoundation or `ffprobe`.
+4. Start and stop forward and reverse slideshows and verify responsive manual navigation afterward.
 5. Record model (without serial number), OS build, artifact SHA-256, tester, date, and pass/fail here.
 
 Until those rows are completed, Catalina and Big Sur support is an engineered target, not a field-verified claim.

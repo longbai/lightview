@@ -5,9 +5,9 @@ Date: 2026-08-28
 
 ## 1. Architecture overview
 
-LightView is an AppKit application written primarily in Swift. It uses small C adapters for NanoSVG and libwebp. The project uses explicit boundaries around file access, decoding, display, playback, caching, and export so that both distribution configurations share all product behavior.
+LightView is an AppKit application written primarily in Swift. It uses small C adapters for NanoSVG and libwebp. The project uses explicit boundaries around file access, decoding, display, playback, and caching so that both distribution configurations share all product behavior.
 
-The design is AppKit-oriented rather than an adaptation of a SwiftUI or SimpView structure. Window controllers coordinate native views; model and service objects contain testable behavior; decode and export work occurs outside the main thread.
+The design is AppKit-oriented rather than an adaptation of a SwiftUI or SimpView structure. Window controllers coordinate native views; model and service objects contain testable behavior; decode work occurs outside the main thread.
 
 ```text
 NSApplication / AppCoordinator
@@ -44,7 +44,6 @@ LightView/
 │   ├── Canvas/
 │   ├── Catalog/
 │   ├── Playback/
-│   ├── Exporting/
 │   ├── FileAccess/
 │   ├── Interface/
 │   └── Preferences/
@@ -92,7 +91,6 @@ Representative states:
 empty -> loading -> presenting
                  -> failed
 presenting -> loading(next)
-presenting -> exporting (parallel read-only activity)
 ```
 
 Every file change increments a generation identifier. Completion handlers discard results whose generation no longer matches the session, preventing stale decoding from replacing the requested image.
@@ -132,7 +130,7 @@ protocol FolderAccessProvider {
 - Balances every successful `startAccessingSecurityScopedResource()` with exactly one stop call owned by the lease.
 - Refreshes stale bookmarks and removes invalid ones.
 
-The App Store entitlement permits user-selected read/write access. Source images remain logically read-only because LightView implements no rename, delete, overwrite, or other source mutation. The write scope is required so `NSSavePanel` can grant access to the explicit MP4 destination selected by the user.
+The App Store entitlement permits only user-selected read access. LightView implements no rename, delete, overwrite, export, or other source mutation.
 
 ### 3.5 Format detection and decode routing
 
@@ -255,31 +253,15 @@ The default raster-cache budget is 256 MiB. Individual decoded items larger than
 
 Late frames may be skipped to catch up, but frame composition state must remain correct. Minimum frame-duration normalization is format-specific and tested against fixtures.
 
-`SlideshowController` is separate from animated-image playback. It requests navigation commands at the selected interval and suspends while modal panels or export setup require attention.
+`SlideshowController` is separate from animated-image playback. It requests navigation commands at the selected interval and suspends while modal panels require attention.
 
-### 3.13 MP4 export
-
-`MovieExportCoordinator` converts an immutable `MovieExportPlan` into an H.264 MP4 file.
-
-Components:
-
-- `ExportTimelineBuilder`: converts sources, durations, animation policies, and transitions into frame instructions.
-- `ExportFrameComposer`: draws background, fit/fill image content, and transition state into a reusable pixel-buffer pool.
-- `MP4Writer`: owns `AVAssetWriter`, `AVAssetWriterInput`, and `AVAssetWriterInputPixelBufferAdaptor`.
-- `ExportProgress`: thread-safe progress and cancellation state.
-
-The export pipeline is bounded: it composes and submits one small group of frames at a time and does not retain the complete output timeline as raster images.
-
-Temporary files are created beside the selected destination when permitted or inside the application temporary directory, then atomically moved to the final destination after successful completion. Cancellation removes only the temporary output owned by the export operation.
-
-### 3.14 Interface and preferences
+### 3.13 Interface and preferences
 
 Interface controllers are conventional AppKit controllers:
 
 - `WelcomeViewController`
 - `PreferencesWindowController`
 - `ImageInfoWindowController`
-- `MovieExportWindowController`
 
 The welcome keyboard map is built from the same immutable `CommandCatalog` used to construct menus, preventing documentation and menu shortcuts from diverging.
 
@@ -338,7 +320,6 @@ Errors are mapped into user-facing categories while preserving diagnostic causes
 - Damaged or truncated content.
 - Image dimensions or allocation exceed safety limits.
 - Decode cancelled.
-- MP4 destination, encoder, disk-space, or cancellation failure.
 
 Expected file and decode failures shall not terminate the application or leave a stale image labeled as the new file.
 
@@ -354,7 +335,6 @@ Expected file and decode failures shall not terminate the application or leave a
 - Generation-based stale-result rejection.
 - GIF/APNG/WebP duration and loop normalization.
 - Slideshow state transitions.
-- Export timeline and transition interpolation.
 - Preference validation and migration.
 - Security-scoped lease balancing using test doubles.
 
@@ -382,7 +362,6 @@ Golden-image comparisons shall use defined tolerances for decoder and color-mana
 - Background/foreground animation energy behavior.
 - Direct folder access without a permission prompt.
 - App Store single-file access followed by folder authorization and bookmark restoration.
-- MP4 export for static images, mixed dimensions, transparency, animated input, both transitions, cancellation, and invalid destination.
 
 ### 7.4 UI smoke tests
 
@@ -406,7 +385,6 @@ Scenarios:
 5. Rapid traversal of 100 mixed files.
 6. Large animated GIF and animated WebP.
 7. SVG with many paths.
-8. 1080p MP4 export.
 
 Each comparison run uses the same files, settle time, foreground state, run count, and launch order for LightView, qView, Tovi, and SimpView. Multi-process applications are measured with attributable helper-process deltas as well as main-process RSS. Results include the limitations of RSS summation.
 

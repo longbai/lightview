@@ -23,7 +23,6 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
     private var animationIsPlaying = false
     private var animationSpeed = 1.0
     private var resumesAnimationAfterOcclusion = false
-    private var movieExportWindowController: MovieExportWindowController?
     private var currentImageAccessLease: AccessLease?
     private var folderAccessLease: AccessLease?
     private var folderNavigationDenied = false
@@ -227,28 +226,6 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             modificationDate: values?.contentModificationDate
         ))
     }
-    @objc func exportMP4(_ sender: Any?) {
-        guard let currentURL = session.currentURL, session.currentAsset != nil else { return }
-        if let movieExportWindowController {
-            movieExportWindowController.showWindow(sender)
-            movieExportWindowController.window?.makeKeyAndOrderFront(sender)
-            return
-        }
-        let suspendedSlideshow = suspendSlideshowForModalPanel()
-        let folderURLs = session.catalog?.entries.map(\.url) ?? [currentURL]
-        let controller = MovieExportWindowController(currentURL: currentURL, folderURLs: folderURLs)
-        controller.onClose = { [weak self, weak controller] in
-            guard let self else { return }
-            if self.movieExportWindowController === controller {
-                self.movieExportWindowController = nil
-            }
-            self.restoreSlideshowAfterModalPanel(ifNeeded: suspendedSlideshow)
-        }
-        movieExportWindowController = controller
-        controller.showWindow(sender)
-        controller.window?.makeKeyAndOrderFront(sender)
-    }
-
     func showImageInformationWhenReady() {
         guard session.currentAsset == nil else {
             showImageInformation(nil)
@@ -305,7 +282,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
             #selector(rotateLeft(_:)), #selector(rotateRight(_:)), #selector(flipHorizontal(_:)),
             #selector(flipVertical(_:)), #selector(reloadImage(_:)),
             #selector(revealImageInFinder(_:)), #selector(openImageWith(_:)),
-            #selector(showImageInformation(_:)), #selector(exportMP4(_:)),
+            #selector(showImageInformation(_:)),
         ]
         let animationActions: Set<Selector> = [
             #selector(toggleAnimationPlayback(_:)), #selector(previousAnimationFrame(_:)),
@@ -570,7 +547,7 @@ final class ViewerWindowController: NSWindowController, NSUserInterfaceValidatio
         #selector(rotateLeft(_:)), #selector(rotateRight(_:)), #selector(flipHorizontal(_:)),
         #selector(flipVertical(_:)), #selector(toggleViewerFullScreen(_:)),
         #selector(reloadImage(_:)), #selector(revealImageInFinder(_:)),
-        #selector(openImageWith(_:)), #selector(showImageInformation(_:)), #selector(exportMP4(_:)),
+        #selector(openImageWith(_:)), #selector(showImageInformation(_:)),
         #selector(toggleAnimationPlayback(_:)), #selector(previousAnimationFrame(_:)),
         #selector(nextAnimationFrame(_:)), #selector(decreaseAnimationSpeed(_:)),
         #selector(normalAnimationSpeed(_:)), #selector(increaseAnimationSpeed(_:)), #selector(toggleSlideshow(_:)),

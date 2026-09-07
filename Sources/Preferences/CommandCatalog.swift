@@ -33,7 +33,6 @@ public enum CommandIdentifier: String, CaseIterable, Hashable, Sendable {
     case openWith
     case reload
     case revealInFinder
-    case exportMP4
 }
 
 public struct CommandModifiers: OptionSet, Hashable, Sendable {
@@ -105,7 +104,6 @@ public enum CommandCatalog {
         .init(identifier: .openWith, title: "Open With…", keyEquivalent: "", shortcutDescription: ""),
         .init(identifier: .reload, title: "Reload", keyEquivalent: "r", modifiers: .command, shortcutDescription: "⌘R"),
         .init(identifier: .revealInFinder, title: "Reveal in Finder", keyEquivalent: "", shortcutDescription: ""),
-        .init(identifier: .exportMP4, title: "Export MP4…", keyEquivalent: "e", modifiers: .command, shortcutDescription: "⌘E"),
     ]
 
     public static func definition(for identifier: CommandIdentifier) -> CommandDefinition {

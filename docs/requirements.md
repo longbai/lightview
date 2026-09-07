@@ -5,7 +5,7 @@ Date: 2026-08-28
 
 ## 1. Product definition
 
-LightView is a lightweight, native image viewer for macOS. It combines the useful viewing, navigation, animation, slideshow, and video-export capabilities observed in qView and Tovi while using a new Swift/AppKit codebase with its own architecture and naming.
+LightView is a lightweight, native image viewer for macOS. It combines useful viewing, navigation, animation, slideshow, and metadata capabilities in a new Swift/AppKit codebase with its own architecture and naming.
 
 The product prioritizes:
 
@@ -33,7 +33,7 @@ LightView is built from one source tree with two release configurations:
 - `Release-Direct`: Developer ID signed, notarized, Hardened Runtime enabled, App Sandbox disabled.
 - `Release-AppStore`: Mac App Store signed, App Sandbox enabled, user-selected file access and security-scoped bookmarks enabled.
 
-The configurations provide the same viewing and export features. They are alternative distribution channels and are not intended to be installed side by side.
+The configurations provide the same viewing features. They are alternative distribution channels and are not intended to be installed side by side.
 
 ## 3. Functional requirements
 
@@ -105,25 +105,7 @@ LightView shall provide:
 - Full-screen operation.
 - Immediate cancellation when the user manually navigates.
 
-### 3.6 MP4 export
-
-LightView shall export the current image or the current folder sequence as a silent MP4 slideshow using AVFoundation.
-
-The export panel shall provide:
-
-- 480p, 720p, and 1080p output presets.
-- Preservation of source aspect ratio.
-- Fit or fill composition.
-- Solid-color or user-selected image background.
-- Slide and fade transitions.
-- Configurable duration for static images.
-- GIF/animated-image duration options: one loop, source loop count when finite, or a user-defined maximum duration.
-- Progress, cancellation, and a clear success or failure result.
-- Output destination through `NSSavePanel`.
-
-The output format is H.264 video in an `.mp4` container for broad compatibility. Audio tracks, captions, timeline editing, arbitrary effects, and general-purpose video editing are out of scope.
-
-### 3.7 File information and system integration
+### 3.6 File information and system integration
 
 LightView shall provide:
 
@@ -139,7 +121,7 @@ LightView shall provide:
 
 LightView shall not provide copying, pasting, renaming, deleting, moving to Trash, permanent deletion, or undoing file operations.
 
-### 3.8 Welcome and help interface
+### 3.7 Welcome and help interface
 
 On first launch with no image, LightView shall show a native image-oriented welcome view inspired by Tovi's concise shortcut introduction without copying Tovi assets or implementation.
 
@@ -154,7 +136,7 @@ It shall include:
 
 The welcome interface shall use AppKit visual-effect, stack, collection, and text views. It shall not load HTML or start WebKit processes.
 
-### 3.9 Appearance
+### 3.8 Appearance
 
 LightView shall support:
 
@@ -168,7 +150,7 @@ LightView shall not bundle Tovi's picture-theme assets.
 
 LightView shall ship an original application icon that remains recognizable at 16 px, contains no text, and does not imitate qView, Tovi, Apple Quick Look, Preview, or Photos branding. The source master and all required macOS icon representations shall be versioned with the project.
 
-### 3.10 Preferences and shortcuts
+### 3.9 Preferences and shortcuts
 
 Preferences shall include appearance, background, sort order, wrapping, preload level, slideshow interval, animation energy saving, initial zoom mode, zoom step, window resizing behavior, and welcome-guide visibility. Slideshow direction is selected by the fixed forward/reverse commands rather than stored as a preference.
 
@@ -195,7 +177,6 @@ Initial shortcut map:
 | Start or stop slideshow | Return |
 | File information | Command-I |
 | Reload | Command-R |
-| Export MP4 | Command-E |
 
 Shortcuts that conflict with text entry or system behavior shall be inactive while an editable control has focus.
 
@@ -255,12 +236,12 @@ Performance targets are budgets, not permission to reduce correctness. Results s
 - Decode jobs are cancellable when the user navigates away.
 - Cache accounting uses decoded bytes, not compressed file size.
 - Reusable cached images are evicted under memory pressure; a window releases its current display asset when it closes.
-- Animation and export use bounded frame pipelines.
+- Animation uses a bounded frame pipeline.
 - The application shall release the current full-resolution raster after switching files unless it remains inside the configured cache budget.
 
 ### 5.3 Responsiveness and concurrency
 
-- Filesystem enumeration, metadata inspection, decoding, SVG parsing, WebP decoding, and MP4 composition shall not block the main thread.
+- Filesystem enumeration, metadata inspection, decoding, SVG parsing, and WebP decoding shall not block the main thread.
 - AppKit view and menu updates remain on the main thread.
 - A stale asynchronous result shall never replace a newer navigation result.
 - Closing a window cancels work owned only by that window.
@@ -280,7 +261,7 @@ Performance targets are budgets, not permission to reduce correctness. Results s
 - SVG external resources and scripts are disabled.
 - Malformed images must fail without crashing or unbounded allocation.
 - Direct distribution uses Hardened Runtime, signing, and notarization.
-- The App Store build requests only file capabilities necessary for viewing and exporting.
+- The App Store build requests only read-only file capabilities necessary for viewing.
 
 ## 6. Explicitly out of scope
 
@@ -293,7 +274,7 @@ Performance targets are budgets, not permission to reduce correctness. Results s
 - Recursive folder browsing.
 - Metadata editing.
 - Printing.
-- General-purpose video editing or audio export.
+- Video or audio export.
 - SwiftUI, WebKit, Qt, Electron, and browser-based rendering.
 - Side-by-side installation of Direct and App Store editions.
 
@@ -303,7 +284,7 @@ A version 1 release is acceptable only when:
 
 1. Both release configurations build successfully as Universal 2 applications.
 2. The x86_64 slice declares macOS 10.15 and the arm64 slice declares macOS 11.0.
-3. Unit, integration, malformed-input, and export tests pass; UI smoke passes before distribution unless a documented host automation failure is still under investigation.
+3. Unit, integration, and malformed-input tests pass; UI smoke passes before distribution unless a documented host automation failure is still under investigation.
 4. Direct and sandbox file-access workflows pass their separate acceptance tests.
 5. Supported static and animated format fixtures render correctly.
 6. Performance results are recorded against Tovi, qView, and the existing SimpView baseline using the same input files and measurement method.

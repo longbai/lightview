@@ -2,17 +2,17 @@
 
 ## Automated local checks
 
-- [x] 148 unit, integration, malformed-input, allocation-limit, export, distribution-resource, and performance tests pass on the current M1 host, including a real HEIC/EXIF fixture.
+- [x] 143 unit, integration, malformed-input, allocation-limit, distribution-resource, and performance tests pass on the current M1 host, including a real HEIC/EXIF fixture.
 - [x] Release-Direct and Release-AppStore build as universal x86_64 + arm64 applications.
 - [x] x86_64 declares macOS 10.15; arm64 declares macOS 11.0.
 - [x] No SwiftUI or WebKit linkage is present.
 - [x] Direct has no App Sandbox entitlement.
-- [x] App Store has only App Sandbox, user-selected read/write files, and app-scoped bookmarks; it has no network entitlement. Write access is required only for the explicit MP4 save destination.
+- [x] App Store has only App Sandbox, user-selected read-only files, and app-scoped bookmarks; it has no network entitlement.
 - [x] Both local ad hoc artifacts carry Hardened Runtime and pass strict code-signature verification.
 - [x] Both configurations pass current-system startup smoke.
 - [x] English and Simplified Chinese localization keys match.
 - [x] Third-party source licenses are present.
-- [ ] Empty-window RSS target of 55 MiB is not met: final three-second smoke samples were 80.08 MiB (Direct) and 86.30 MiB (App Store). The 12000×8000 fit-image target is met (149.20 MiB alternating-comparison median; 137.45 MiB post-EXIF/icon final-binary recheck median).
+- [ ] Empty-window RSS target of 55 MiB is not met: the 1.0.4 three-second smoke samples were 87.14 MiB (Direct) and 87.48 MiB (App Store). The 12000×8000 fit-image target is met (149.20 MiB alternating-comparison median; 137.45 MiB post-EXIF/icon final-binary recheck median).
 - [ ] UI automation executes. Tests compile, but the current host currently kills the UI test Runner before it establishes the automation connection; both a new EXIF-overlay case and an unchanged welcome-window case reproduce the infrastructure failure.
 - [ ] Address Sanitizer executes. The Xcode 26 hostless XCTest runner builds the ASan bundle but aborts before tests because its interceptors load too late.
 
@@ -33,7 +33,7 @@ Set `LIGHTVIEW_REQUIRE_DISTRIBUTION_SIGNATURE=1` when running `scripts/verify-co
 - [ ] Current Intel macOS test row completed.
 - [ ] Apple silicon macOS 11 test row completed.
 - [x] Current Apple silicon smoke completed on Apple M1/macOS 26.6.2.
-- [ ] English and Simplified Chinese visual pass, keyboard-only traversal, VoiceOver labels, full-screen entry/exit, multiwindow behavior, sandbox folder authorization/cancel/restore, and completed MP4 export.
+- [ ] English and Simplified Chinese visual pass, keyboard-only traversal, VoiceOver labels, full-screen entry/exit, multiwindow behavior, and sandbox folder authorization/cancel/restore.
 
 ## Reproducible commands
 

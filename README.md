@@ -2,7 +2,7 @@
 
 <img src="Resources/AppIcon/LightView-master.png" alt="LightView application icon" width="128">
 
-LightView is a lightweight, native image viewer for macOS, written in Swift with AppKit. It combines the focused viewing, folder navigation, animation, slideshow, image information, and MP4-export capabilities selected from qView and Tovi in a new codebase. It does not use SwiftUI, WebKit, Qt, Electron, or browser rendering.
+LightView is a lightweight, native image viewer for macOS, written in Swift with AppKit. It combines focused viewing, folder navigation, animation, slideshow, and image-information capabilities in a new codebase. It does not use SwiftUI, WebKit, Qt, Electron, or browser rendering.
 
 The current Direct release is signed with Apple Developer ID and notarized for public distribution. It builds and runs on the current Apple silicon test Mac; Intel Catalina and Apple silicon Big Sur remain explicit real-system release gates.
 
@@ -12,7 +12,7 @@ The current Direct release is signed with Apple Developer ID and notarized for p
 - Fit, fill, actual size, pointer-anchored zoom, pan, rotate, flip, and full screen. The live window title shows folder position, filename, zoom, displayed/original dimensions, file size, format, and animation frame count when applicable.
 - Structured EXIF display for ImageIO formats, including HEIC: press **E** for a translucent canvas overlay, or **Command-I** for the complete File & Image / EXIF information window. Images without meaningful EXIF never show an empty overlay.
 - Static ImageIO formats, safe NanoSVG-based SVG rendering, static/animated WebP fallback through decoder-only libwebp, plus GIF and APNG playback.
-- Forward/reverse slideshow and silent H.264 MP4 export at 480p, 720p, or 1080p with fit/fill, backgrounds, slide/fade transitions, progress, and cancellation.
+- Forward and reverse slideshows with configurable timing and optional folder wrapping.
 - Typed AppKit preferences for appearance, background, folder order, wrapping, preload, zoom, slideshow interval, energy saving, window resize, and welcome-guide visibility.
 - Two configurations from the same source: unsandboxed Direct and sandboxed App Store.
 - Original LightView app icon supplied through a Catalina-compatible macOS Asset Catalog, with 16–1024 px representations.
@@ -51,13 +51,12 @@ See [compatibility-matrix.md](docs/compatibility-matrix.md) for the distinction 
 | Start or stop slideshow | Return |
 | File information | Command-I |
 | Reload | Command-R |
-| Export MP4 | Command-E |
 
 Escape closes a viewer outside full screen. Mouse dragging or scrolling pans; trackpad pinch zooms around the interaction point. Shortcuts are intentionally not customizable. LightView does not implement copy, paste, rename, Trash/delete, or file-operation undo.
 
 ## Direct and App Store behavior
 
-`Release-Direct` uses ordinary file access and has no App Sandbox entitlement. `Release-AppStore` is sandboxed with user-selected read/write access and app-scoped bookmarks. The application does not provide destructive source-file operations; write access is used for the explicit MP4 destination selected through `NSSavePanel`. The selected image opens immediately, while adjacent navigation asks for its folder only when broader permission is needed. The two channels have the same viewer/export feature code and are alternatives, not side-by-side editions.
+`Release-Direct` uses ordinary file access and has no App Sandbox entitlement. `Release-AppStore` is sandboxed with user-selected read-only access and app-scoped bookmarks. The selected image opens immediately, while adjacent navigation asks for its folder only when broader permission is needed. Both channels have the same viewing feature code and are alternatives, not side-by-side editions.
 
 Local artifacts default to ad hoc signing with Hardened Runtime for verification. GitHub Direct arm64 and x86_64 DMGs, together with the applications they contain, are signed with Developer ID, notarized by Apple, and carry stapled tickets. App Store distribution still requires the correct distribution profile and store validation.
 
@@ -84,7 +83,7 @@ The build script compiles the x86_64/10.15 and arm64/11.0 slices separately, ver
 The release script builds separate Intel and Apple silicon DMGs, signs and notarizes both applications and disk images, creates the version tag, and publishes the assets through GitHub CLI. GitHub generates the source ZIP and TAR.GZ automatically from that tag.
 
 ```bash
-./scripts/release-github.sh 1.0.3
+./scripts/release-github.sh 1.0.4
 ```
 
 It reads the version from `Resources/Info.plist` and refuses a mismatched argument, dirty working tree, or existing tag. No credentials are stored in the repository. By default it uses the `LightView-Notary` notarytool Keychain profile and the first valid Developer ID Application identity. These can be overridden locally:
@@ -104,7 +103,7 @@ chmod 600 .env.notary
 LIGHTVIEW_NOTARY_PROFILE=LightView-Notary \
 LIGHTVIEW_CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 LIGHTVIEW_GITHUB_REPOSITORY=longbai/lightview \
-./scripts/release-github.sh 1.0.3
+./scripts/release-github.sh 1.0.4
 ```
 
 For Mac App Store distribution, archive with the `Release-AppStore` configuration and upload using the checked-in export options. Xcode Automatic Signing supplies the App Store distribution identity and profile from the configured developer account; no credentials are stored in the project.
@@ -141,7 +140,7 @@ After the EXIF, HEIC, title, and application-icon changes, the final Direct bina
 
 ## Architecture and scope
 
-`AppCoordinator` owns application-wide menus and services. Each `ViewerWindowController` owns an independent `ViewingSession`; the session coordinates a cancellable `ImageLoadPipeline`, `FolderCatalog`, playback controllers, and the layer-backed `ImageCanvasView`. Decoder, cache, viewport geometry, access, playback, and export boundaries are independently tested. This naming and structure were designed for LightView and do not follow SimpView's architecture.
+`AppCoordinator` owns application-wide menus and services. Each `ViewerWindowController` owns an independent `ViewingSession`; the session coordinates a cancellable `ImageLoadPipeline`, `FolderCatalog`, playback controllers, and the layer-backed `ImageCanvasView`. Decoder, cache, viewport geometry, access, and playback boundaries are independently tested. This naming and structure were designed for LightView and do not follow SimpView's architecture.
 
 Product behavior is specified in [requirements.md](docs/requirements.md), and implementation boundaries and tests are in [technical-spec.md](docs/technical-spec.md).
 
