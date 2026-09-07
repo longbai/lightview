@@ -101,6 +101,7 @@ chmod 600 .env.notary
 
 ```bash
 LIGHTVIEW_NOTARY_PROFILE=LightView-Notary \
+LIGHTVIEW_NOTARY_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db" \
 LIGHTVIEW_CODE_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 LIGHTVIEW_GITHUB_REPOSITORY=longbai/lightview \
 ./scripts/release-github.sh 1.0.4

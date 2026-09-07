@@ -31,6 +31,13 @@ export -n LIGHTVIEW_APP_SPECIFIC_PASSWORD 2>/dev/null || true
 : "${LIGHTVIEW_TEAM_ID:?Set LIGHTVIEW_TEAM_ID in $env_file}"
 : "${LIGHTVIEW_APP_SPECIFIC_PASSWORD:?Set LIGHTVIEW_APP_SPECIFIC_PASSWORD in $env_file}"
 
+notary_keychain_args=()
+expect_keychain_args=()
+if [[ -n "${LIGHTVIEW_NOTARY_KEYCHAIN:-}" ]]; then
+    notary_keychain_args=(--keychain "$LIGHTVIEW_NOTARY_KEYCHAIN")
+    expect_keychain_args=("$LIGHTVIEW_NOTARY_KEYCHAIN")
+fi
+
 command -v xcrun >/dev/null || { echo "xcrun is required." >&2; exit 4; }
 [[ -x /usr/bin/expect ]] || { echo "/usr/bin/expect is required." >&2; exit 4; }
 [[ -x "$expect_helper" ]] || { echo "$expect_helper is not executable." >&2; exit 4; }
@@ -47,10 +54,11 @@ printf '%s\n' "$LIGHTVIEW_APP_SPECIFIC_PASSWORD" \
     | "$expect_helper" \
         "$LIGHTVIEW_NOTARY_PROFILE" \
         "$LIGHTVIEW_APPLE_ID" \
-        "$LIGHTVIEW_TEAM_ID"
+        "$LIGHTVIEW_TEAM_ID" \
+        "${expect_keychain_args[@]}"
 
 cleanup
 trap - EXIT
 
-xcrun notarytool history --keychain-profile "$LIGHTVIEW_NOTARY_PROFILE" >/dev/null
+xcrun notarytool history --keychain-profile "$LIGHTVIEW_NOTARY_PROFILE" "${notary_keychain_args[@]}" >/dev/null
 echo "Notarization profile '$LIGHTVIEW_NOTARY_PROFILE' is stored and validated."

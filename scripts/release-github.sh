@@ -13,6 +13,10 @@ tag="v$version"
 repository="${LIGHTVIEW_GITHUB_REPOSITORY:-longbai/lightview}"
 notary_profile="${LIGHTVIEW_NOTARY_PROFILE:-LightView-Notary}"
 sign_identity="${LIGHTVIEW_CODE_SIGN_IDENTITY:-}"
+notary_keychain_args=()
+if [[ -n "${LIGHTVIEW_NOTARY_KEYCHAIN:-}" ]]; then
+    notary_keychain_args=(--keychain "$LIGHTVIEW_NOTARY_KEYCHAIN")
+fi
 
 if [[ "$version" != "$plist_version" ]]; then
     echo "Requested version $version does not match Info.plist version $plist_version" >&2
@@ -71,7 +75,7 @@ case "$remote_tag_status" in
 esac
 
 gh auth status >/dev/null
-xcrun notarytool history --keychain-profile "$notary_profile" >/dev/null
+xcrun notarytool history --keychain-profile "$notary_profile" "${notary_keychain_args[@]}" >/dev/null
 
 if [[ -z "$sign_identity" ]]; then
     sign_identity="$(
@@ -163,8 +167,8 @@ arm_notary_zip="$output_root/LightView-$version-macos-arm64-notary.zip"
 ditto -c -k --keepParent "$x86_app" "$x86_notary_zip"
 ditto -c -k --keepParent "$arm_app" "$arm_notary_zip"
 
-xcrun notarytool submit "$x86_notary_zip" --keychain-profile "$notary_profile" --wait
-xcrun notarytool submit "$arm_notary_zip" --keychain-profile "$notary_profile" --wait
+xcrun notarytool submit "$x86_notary_zip" --keychain-profile "$notary_profile" "${notary_keychain_args[@]}" --wait
+xcrun notarytool submit "$arm_notary_zip" --keychain-profile "$notary_profile" "${notary_keychain_args[@]}" --wait
 
 xcrun stapler staple "$x86_app"
 xcrun stapler staple "$arm_app"
@@ -190,8 +194,8 @@ hdiutil create -volname LightView -srcfolder "$arm_staging" -format UDZO "$arm_d
 codesign --force --sign "$sign_identity" --timestamp "$x86_dmg"
 codesign --force --sign "$sign_identity" --timestamp "$arm_dmg"
 
-xcrun notarytool submit "$x86_dmg" --keychain-profile "$notary_profile" --wait
-xcrun notarytool submit "$arm_dmg" --keychain-profile "$notary_profile" --wait
+xcrun notarytool submit "$x86_dmg" --keychain-profile "$notary_profile" "${notary_keychain_args[@]}" --wait
+xcrun notarytool submit "$arm_dmg" --keychain-profile "$notary_profile" "${notary_keychain_args[@]}" --wait
 
 xcrun stapler staple "$x86_dmg"
 xcrun stapler staple "$arm_dmg"
