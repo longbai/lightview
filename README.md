@@ -2,7 +2,17 @@
 
 <img src="Resources/AppIcon/LightView-master.png" alt="LightView application icon" width="128">
 
-LightView is a lightweight, native image viewer for macOS, written in Swift with AppKit. It combines focused viewing, folder navigation, animation, slideshow, and image-information capabilities in a new codebase. It does not use SwiftUI, WebKit, Qt, Electron, or browser rendering.
+**Free · Lightweight · High performance · Ad-free · Open source**
+
+[Download on the Mac App Store](https://apps.apple.com/app/id6806554156) · [Download the notarized DMG](https://github.com/longbai/lightview/releases/latest)
+
+<img src="docs/store-assets/01-LightView-en-US.jpg" alt="LightView showing a photo and its compact viewing toolbar" width="720">
+
+LightView is a native Mac image viewer built with Swift and AppKit. Open a picture from Finder, flip through its folder with the arrow keys, and check EXIF without leaving the image. Your pictures stay on your Mac.
+
+- View WebP, HEIC, SVG, and more, with playback for animated GIF, APNG, and WebP.
+- Zoom, rotate, and browse folders with a compact toolbar and keyboard shortcuts.
+- No ads, accounts, tracking, or uploads. The project is [MIT-licensed](LICENSE).
 
 The current Direct release is signed with Apple Developer ID and notarized for public distribution. It builds and runs on the current Apple silicon test Mac; Intel Catalina and Apple silicon Big Sur remain explicit real-system release gates.
 
